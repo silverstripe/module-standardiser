@@ -1,0 +1,6 @@
+_data
+_modules
+_tmp
+vendor
+.phpunit.result.cache
+composer.lock
