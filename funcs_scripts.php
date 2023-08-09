@@ -1,5 +1,7 @@
 <?php
 
+use Panlatent\CronExpressionDescriptor\ExpressionDescriptor;
+
 // These functions in scripts can be used in scripts
 
 /**
@@ -80,6 +82,24 @@ function delete_file_if_exists($filename)
 }
 
 /**
+ * Rename a file to the root of the module being processed if it exists
+ *
+ * Example usage:
+ * rename_file_if_exists('oldfilename.md', 'newfilename.md')
+ */
+function rename_file_if_exists($oldFilename, $newFilename)
+{
+    global $MODULE_DIR;
+    $oldPath = "$MODULE_DIR/$oldFilename";
+    $newPath = "$MODULE_DIR/$newFilename";
+    if (file_exists($oldPath)) {
+        $contents = read_file($oldFilename);
+        write_file($newPath, $contents);
+        delete_file_if_exists($oldFilename);
+    }
+}
+
+/**
  * Determine if the module being processed is a recipe, including silverstripe-installer
  *
  * Example usage:
@@ -120,8 +140,23 @@ function module_is_one_of($repos)
 }
 
 /**
+ * Return the github account of the module being processed
+ *
+ * Example usage:
+ * module_account()
+ */
+function module_account()
+{
+    $s = read_file('.git/config');
+    if (!preg_match('#github.com:([^/]+)/#', $s, $matches)) {
+        error('Could not determine github account');
+    }
+    return $matches[1];
+}
+
+/**
  * Output an info message to the console
- * 
+ *
  * Example usage:
  * info('This is a mildly interesting message')
  */
@@ -133,11 +168,27 @@ function info($message)
 
 /**
  * Output a warning message to the console
- * 
+ *
  * Example usage:
  * warning('This is something you might want to pay attention to')
  */
 function warning($message)
 {
     io()->warning($message);
+}
+
+/**
+ * Converts a cron expression to a human readable string
+ * Says UTC because that's what GitHub Actions uses
+ *
+ * Example usage:
+ * human_cron('5 4 * * 0')
+ * => 'At 4:05 AM UTC, only on Sunday'
+ */
+function human_cron(string $cron): string
+{
+    $str = (new ExpressionDescriptor($cron))->getDescription();
+    $str = preg_replace('#0([1-9]):#', '$1:', $str);
+    $str = preg_replace('# (AM|PM),#', ' $1 UTC,', $str);
+    return $str;
 }

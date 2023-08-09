@@ -4,3 +4,4 @@ _tmp
 vendor
 .phpunit.result.cache
 composer.lock
+test.php

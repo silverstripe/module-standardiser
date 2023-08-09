@@ -5,7 +5,7 @@ $year = date('Y');
 $contents = <<<EOT
 BSD 3-Clause License
 
-Copyright (c) $year, SilverStripe Limited - www.silverstripe.com
+Copyright (c) $year, Silverstripe Limited - www.silverstripe.com
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without
@@ -34,4 +34,23 @@ OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 EOT;
 
-write_file_if_not_exist('LICENSE', $contents);
+// standard filename used on framework, admin, cms, etc
+$licenseFilename = 'LICENSE';
+
+// can rename the licence filename on any account
+foreach (['LICENSE.md', 'license.md', 'license'] as $filename) {
+    rename_file_if_exists($filename, $licenseFilename);
+}
+
+// only update licence contents if module is on silverstripe account
+if (module_account() === 'silverstripe') {
+    if (file_exists('LICENSE')) {
+        $oldContents = read_file($licenseFilename);
+        $newContents = str_replace('SilverStripe', 'Silverstripe', $oldContents);
+        if ($newContents !== $oldContents) {
+            write_file_even_if_exists($licenseFilename, $newContents);
+        }
+    } else {
+        write_file_if_not_exist($licenseFilename, $contents);
+    }
+}
