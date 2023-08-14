@@ -72,5 +72,17 @@ $app->register('update')
         InputOption::VALUE_NONE,
         'Do not delete _data and _modules directories before running'
     )
+    ->addOption(
+        'update-prs',
+        null,
+        InputOption::VALUE_NONE,
+        'Checkout out and update the latest open PR instead of creating a new one'
+    )
     ->setCode($updateCommand);
-$app->run();
+
+try {
+    $app->run();
+} catch (Error|Exception $e) {
+    // Make sure we output and information about PRs which were raised before killing the process.
+    error("file: {$e->getFile()}\nline: {$e->getLine()}\nmessage: {$e->getMessage()}");
+}

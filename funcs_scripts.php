@@ -1,5 +1,7 @@
 <?php
 
+use Panlatent\CronExpressionDescriptor\ExpressionDescriptor;
+
 // These functions in scripts can be used in scripts
 
 /**
@@ -80,6 +82,24 @@ function delete_file_if_exists($filename)
 }
 
 /**
+ * Rename a file relative to the root of the module being processed if it exists
+ *
+ * Example usage:
+ * rename_file_if_exists('oldfilename.md', 'newfilename.md')
+ */
+function rename_file_if_exists($oldFilename, $newFilename)
+{
+    global $MODULE_DIR;
+    $oldPath = "$MODULE_DIR/$oldFilename";
+    $newPath = "$MODULE_DIR/$newFilename";
+    if (file_exists($oldPath)) {
+        $contents = read_file($oldFilename);
+        write_file($newPath, $contents);
+        delete_file_if_exists($oldFilename);
+    }
+}
+
+/**
  * Determine if the module being processed is a recipe, including silverstripe-installer
  *
  * Example usage:
@@ -88,12 +108,28 @@ function delete_file_if_exists($filename)
 function module_is_recipe()
 {
     global $MODULE_DIR;
-    if (strpos('/recipe-', $MODULE_DIR) !== false
-        || strpos('/silverstripe-installer', $MODULE_DIR) !== false
+    if (strpos($MODULE_DIR, '/recipe-') !== false
+        || strpos($MODULE_DIR, '/silverstripe-installer') !== false
     ) {
         return true;
     }
     return false;
+}
+
+/**
+ * Determine if the module being processed is something installed on a website e.g. silverstripe-admin, not gha-*
+ *
+ * Example usage:
+ * is_module()
+ */
+function is_module()
+{
+    global $MODULE_DIR;
+    return strpos($MODULE_DIR, '/gha-') === false
+        && strpos($MODULE_DIR, '/developer-docs') === false
+        && strpos($MODULE_DIR, '/vendor-plugin') === false
+        && strpos($MODULE_DIR, '/eslint-config') === false
+        && strpos($MODULE_DIR, '/webpack-config') === false;
 }
 
 /**
@@ -112,7 +148,7 @@ function module_is_one_of($repos)
         if (!is_string($repo)) {
             error('repo is not a string');
         }
-        if (strpos("/$repo", $MODULE_DIR) !== false) {
+        if (strpos($MODULE_DIR, "/$repo") !== false) {
             return true;
         }
     }
@@ -120,8 +156,23 @@ function module_is_one_of($repos)
 }
 
 /**
+ * Return the github account of the module being processed
+ *
+ * Example usage:
+ * module_account()
+ */
+function module_account()
+{
+    $s = read_file('.git/config');
+    if (!preg_match('#github.com:([^/]+)/#', $s, $matches)) {
+        error('Could not determine github account');
+    }
+    return $matches[1];
+}
+
+/**
  * Output an info message to the console
- * 
+ *
  * Example usage:
  * info('This is a mildly interesting message')
  */
@@ -133,11 +184,42 @@ function info($message)
 
 /**
  * Output a warning message to the console
- * 
+ *
  * Example usage:
  * warning('This is something you might want to pay attention to')
  */
 function warning($message)
 {
     io()->warning($message);
+}
+
+/**
+ * Converts a cron expression to a human readable string
+ * Says UTC because that's what GitHub Actions uses
+ *
+ * Example usage:
+ * human_cron('5 4 * * 0')
+ * => 'At 4:05 AM UTC, only on Sunday'
+ */
+function human_cron(string $cron): string
+{
+    $str = (new ExpressionDescriptor($cron))->getDescription();
+    $str = preg_replace('#0([1-9]):#', '$1:', $str);
+    $str = preg_replace('# (AM|PM),#', ' $1 UTC,', $str);
+    return $str;
+}
+
+/**
+ * Creates a predicatable random int between 0 and $max based on the module name to be used with the % mod operator.
+ * $offset variable will offset both the min (0) and $max. e.g. $offset of 1 with a max of 27 will return an int
+ * between 1 and 28
+ * Note that this will return the exact same value every time it is called for a given module.
+ */
+function predictable_random_int($max, $offset = 0): int
+{
+    global $MODULE_DIR;
+    $chars = str_split($MODULE_DIR);
+    $codes = array_map(fn($c) => ord($c), $chars);
+    mt_srand(array_sum($codes));
+    return mt_rand(0, $max) + $offset;
 }

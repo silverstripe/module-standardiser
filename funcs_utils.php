@@ -34,7 +34,7 @@ function write_file($path, $contents)
     }
     $dirname = dirname($path);
     if (!file_exists($dirname)) {
-        error("Directory $dirname does not exist");
+        mkdir($dirname, 0775, true);
     }
     $contents = trim($contents) . "\n";
     file_put_contents($path, $contents);
@@ -67,8 +67,39 @@ function supported_modules($cmsMajor)
             'account' => explode('/', $ghrepo)[0],
             'repo' => explode('/', $ghrepo)[1],
             'cloneUrl' => "git@github.com:$ghrepo.git",
-            'branch' => max($module['branches'] ?: [-1])
         ];
+    }
+    return $modules;
+}
+
+/**
+ * Hardcoded list of additional repositories to standardise (e.g. silverstripe/gha-*)
+ * 
+ * Repositories in this list should only have a single supported major version
+ * This will only be included if the $cmsMajor is the CURRENT_CMS_MAJOR
+ */
+function extra_repositories()
+{
+    $modules = [];
+    // iterating to page 7 should be enough to get all the repos well into the future
+    for ($i = 0; $i < 7; $i++) {
+        $json = github_api("https://api.github.com/orgs/silverstripe/repos?per_page=100&page=$i");
+        foreach ($json as $repo) {
+            if ($repo['archived']) {
+                continue;
+            }
+            $ghrepo = $repo['full_name'];
+            // exclude non gha-* repos
+            if (strpos($ghrepo, '/gha-') === false) {
+                continue;
+            }
+            $modules[] = [
+                'ghrepo' => $ghrepo,
+                'account' => explode('/', $ghrepo)[0],
+                'repo' => explode('/', $ghrepo)[1],
+                'cloneUrl' => "git@github.com:$ghrepo.git",
+            ];
+        }
     }
     return $modules;
 }
@@ -169,6 +200,8 @@ function github_token()
  */
 function github_api($url, $data = [])
 {
+    // silverstripe-themes has a kind of weird redirect only for api requests
+    $url = str_replace('/silverstripe-themes/silverstripe-simple', '/silverstripe/silverstripe-simple', $url);
     $token = github_token();
     $jsonStr = empty($data) ? '' : json_encode($data, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
     $ch = curl_init($url);
@@ -265,12 +298,38 @@ function branch_to_checkout($branches, $currentBranch, $currentBranchCmsMajor, $
     return (string) $branchToCheckout;
 }
 
+/**
+ * Uses composer.json to workout the current branch cms major version
+ * 
+ * If composer.json does not exist then it's assumed to be CURRENT_CMS_MAJOR
+ */
 function current_branch_cms_major(
     // this param is only used for unit testing
     string $composerJson = ''
 ) {
-    // read __composer.json of the current branch
-    $contents = $composerJson ?: read_file('composer.json');
+    global $MODULE_DIR;
+
+    if ($composerJson) {
+        $contents = $composerJson;
+    } elseif (check_file_exists('composer.json')) {
+        $contents = read_file('composer.json');
+    } else {
+        return CURRENT_CMS_MAJOR;
+    }
+
+    // special logic for developer-docs
+    if (strpos($MODULE_DIR, '/developer-docs') !== false) {
+        $currentBranch = cmd('git rev-parse --abbrev-ref HEAD', $MODULE_DIR);
+        if (!preg_match('#^(pulls/)?([0-9]+)(\.[0-9]+)?(/|$)#', $currentBranch, $matches)) {
+            error("Could work out current major for developer-docs from branch $currentBranch");
+        }
+        return $matches[2];
+    }
+
+    // special logic for silverstripe-themes/silverstripe-simple
+    if (strpos($MODULE_DIR, '/silverstripe-simple') !== false) {
+        return CURRENT_CMS_MAJOR;
+    }
 
     $json = json_decode($contents);
     if (is_null($json)) {
@@ -287,7 +346,15 @@ function current_branch_cms_major(
     }
     if (!$version) {
         $version = preg_replace('#[^0-9\.]#', '', $json->require->{'silverstripe/assets'} ?? '');
-        $matchedOnBranchThreeLess = true;
+        if ($version) {
+            $matchedOnBranchThreeLess = true;
+        }
+    }
+    if (!$version) {
+        $version = preg_replace('#[^0-9\.]#', '', $json->require->{'cwp/starter-theme'} ?? '');
+        if ($version) {
+            $version += 1;
+        }
     }
     $cmsMajor = '';
     if (preg_match('#^([0-9]+)+\.?[0-9]*$#', $version, $matches)) {

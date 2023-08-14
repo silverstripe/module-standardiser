@@ -34,4 +34,6 @@ trim_trailing_whitespace = false
 insert_final_newline = false
 EOT;
 
-write_file_if_not_exist('.editorconfig', $contents);
+if (is_module()) {
+    write_file_if_not_exist('.editorconfig', $contents);
+}
