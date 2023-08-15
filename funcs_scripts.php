@@ -145,6 +145,21 @@ function is_gha_repository()
 }
 
 /**
+ * Return the module name without the account e.g. silverstripe/silverstripe-admin with return silverstripe-admin
+ *
+ * Example usage:
+ * if (module_name() === 'silverstripe-admin) {
+ *     // logic
+ * }
+ */
+function module_name()
+{
+    global $MODULE_DIR;
+    $parts = explode('/', $MODULE_DIR);
+    return end($parts);
+}
+
+/**
  * Determine if the module being processed is one of the modules in a list
  *
  * Example usage:
