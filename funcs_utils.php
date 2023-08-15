@@ -37,6 +37,11 @@ function write_file($path, $contents)
         mkdir($dirname, 0775, true);
     }
     $contents = trim($contents) . "\n";
+    $existingContents = file_exists($path) ? file_get_contents($path) : '';
+    if ($existingContents && $existingContents === $contents) {
+        info("Contents of $path is already correct, continuing");
+        return;
+    }
     file_put_contents($path, $contents);
     info("Wrote to $path");
 }
