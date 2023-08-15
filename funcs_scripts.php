@@ -108,7 +108,7 @@ function rename_file_if_exists($oldFilename, $newFilename)
 function module_is_recipe()
 {
     global $MODULE_DIR;
-    if (strpos($MODULE_DIR, '/recipe-') !== false
+    if ((strpos($MODULE_DIR, '/recipe-') !== false && strpos($MODULE_DIR, '/recipe-plugin') === false)
         || strpos($MODULE_DIR, '/silverstripe-installer') !== false
     ) {
         return true;
