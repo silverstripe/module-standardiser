@@ -133,6 +133,18 @@ function is_module()
 }
 
 /**
+ * Determine if the module being processed is a gha-* repository e.g. gha-ci
+ *
+ * Example usage:
+ * is_gha_repository()
+ */
+function is_gha_repository()
+{
+    global $MODULE_DIR;
+    return strpos($MODULE_DIR, '/gha-') !== false;
+}
+
+/**
  * Determine if the module being processed is one of the modules in a list
  *
  * Example usage:
