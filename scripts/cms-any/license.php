@@ -41,10 +41,9 @@ $licenseFilename = 'LICENSE';
 foreach (['LICENSE.md', 'license.md', 'license'] as $filename) {
     rename_file_if_exists($filename, $licenseFilename);
 }
-
 // only update licence contents if module is on silverstripe account
 if (module_account() === 'silverstripe') {
-    if (file_exists('LICENSE')) {
+    if (check_file_exists($licenseFilename)) {
         $oldContents = read_file($licenseFilename);
         $newContents = str_replace('SilverStripe', 'Silverstripe', $oldContents);
         if ($newContents !== $oldContents) {
