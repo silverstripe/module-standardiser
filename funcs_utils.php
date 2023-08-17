@@ -207,6 +207,7 @@ function github_api($url, $data = [])
 {
     // silverstripe-themes has a kind of weird redirect only for api requests
     $url = str_replace('/silverstripe-themes/silverstripe-simple', '/silverstripe/silverstripe-simple', $url);
+    info("Making curl request to $url");
     $token = github_token();
     $jsonStr = empty($data) ? '' : json_encode($data, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
     $ch = curl_init($url);
