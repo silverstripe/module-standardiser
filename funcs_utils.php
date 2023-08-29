@@ -78,7 +78,7 @@ function supported_modules($cmsMajor)
 }
 
 /**
- * Hardcoded list of additional repositories to standardise (e.g. silverstripe/gha-*)
+ * Hardcoded list of non-supported, additional repositories to standardise (e.g. silverstripe/gha-*)
  * 
  * Repositories in this list should only have a single supported major version
  * This will only be included if the $cmsMajor is the CURRENT_CMS_MAJOR
