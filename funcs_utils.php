@@ -78,7 +78,7 @@ function supported_modules($cmsMajor)
 }
 
 /**
- * Hardcoded list of additional repositories to standardise (e.g. silverstripe/gha-*)
+ * Hardcoded list of non-supported, additional repositories to standardise (e.g. silverstripe/gha-*)
  * 
  * Repositories in this list should only have a single supported major version
  * This will only be included if the $cmsMajor is the CURRENT_CMS_MAJOR
@@ -86,9 +86,19 @@ function supported_modules($cmsMajor)
 function extra_repositories()
 {
     $modules = [];
-    // iterating to page 7 should be enough to get all the repos well into the future
-    for ($i = 0; $i < 7; $i++) {
-        $json = github_api("https://api.github.com/orgs/silverstripe/repos?per_page=100&page=$i");
+    // iterating to page 10 will be enough to get all the repos well into the future
+    for ($i = 0; $i < 10; $i++) {
+        $path = "_data/extra_repositories-$i.json";
+        if (file_exists($path)) {
+            info("Reading local data from $path");
+            $json = json_decode(file_get_contents($path), true);
+        } else {
+            $json = github_api("https://api.github.com/orgs/silverstripe/repos?per_page=100&page=$i");
+            file_put_contents($path, json_encode($json, JSON_UNESCAPED_SLASHES | JSON_PRETTY_PRINT));
+        }
+        if (empty($json)) {
+            break;
+        }
         foreach ($json as $repo) {
             if ($repo['archived']) {
                 continue;
