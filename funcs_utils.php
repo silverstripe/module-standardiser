@@ -9,7 +9,7 @@ use Symfony\Component\Process\Process;
 
 /**
  * Output an error to the console and halt progress
- * 
+ *
  * error() is not intended for use in scripts specificially because it will halt progress
  * Instead scripts should be more tolerant though use of functions like check_file_exists() or just
  * using warning() instead which output a big warning in the console while still continuing
@@ -79,12 +79,15 @@ function supported_modules($cmsMajor)
 
 /**
  * Hardcoded list of non-supported, additional repositories to standardise (e.g. silverstripe/gha-*)
- * 
+ *
  * Repositories in this list should only have a single supported major version
  * This will only be included if the $cmsMajor is the CURRENT_CMS_MAJOR
  */
 function extra_repositories()
 {
+    $importantRepos = [
+        'silverstripe/markdown-php-codesniffer',
+    ];
     $modules = [];
     // iterating to page 10 will be enough to get all the repos well into the future
     for ($i = 0; $i < 10; $i++) {
@@ -104,8 +107,8 @@ function extra_repositories()
                 continue;
             }
             $ghrepo = $repo['full_name'];
-            // exclude non gha-* repos
-            if (strpos($ghrepo, '/gha-') === false) {
+            // Only include repos we care about
+            if (!in_array($ghrepo, $importantRepos) && strpos($ghrepo, '/gha-') === false) {
                 continue;
             }
             $modules[] = [
@@ -290,7 +293,7 @@ function output_repos_with_prs_created()
 
 /**
  * Works out which branch in a module to checkout before running scripts on it
- * 
+ *
  * Assumes that for each module there is only a single major version per cms-major version
  */
 function branch_to_checkout($branches, $currentBranch, $currentBranchCmsMajor, $cmsMajor, $branchOption)
@@ -316,7 +319,7 @@ function branch_to_checkout($branches, $currentBranch, $currentBranchCmsMajor, $
 
 /**
  * Uses composer.json to workout the current branch cms major version
- * 
+ *
  * If composer.json does not exist then it's assumed to be CURRENT_CMS_MAJOR
  */
 function current_branch_cms_major(
@@ -324,6 +327,17 @@ function current_branch_cms_major(
     string $composerJson = ''
 ) {
     global $MODULE_DIR;
+
+    // Some repositories don't have a valid matching CMS major
+    $ignoreCMSMajor = [
+        '/silverstripe-simple',
+        '/markdown-php-codesniffer',
+    ];
+    foreach ($ignoreCMSMajor as $ignore) {
+        if (strpos($MODULE_DIR, $ignore) !== false) {
+            return CURRENT_CMS_MAJOR;
+        }
+    }
 
     if ($composerJson) {
         $contents = $composerJson;
@@ -337,14 +351,9 @@ function current_branch_cms_major(
     if (strpos($MODULE_DIR, '/developer-docs') !== false) {
         $currentBranch = cmd('git rev-parse --abbrev-ref HEAD', $MODULE_DIR);
         if (!preg_match('#^(pulls/)?([0-9]+)(\.[0-9]+)?(/|$)#', $currentBranch, $matches)) {
-            error("Could work out current major for developer-docs from branch $currentBranch");
+            error("Could not work out current major for developer-docs from branch $currentBranch");
         }
         return $matches[2];
-    }
-
-    // special logic for silverstripe-themes/silverstripe-simple
-    if (strpos($MODULE_DIR, '/silverstripe-simple') !== false) {
-        return CURRENT_CMS_MAJOR;
     }
 
     $json = json_decode($contents);
