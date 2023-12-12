@@ -19,7 +19,7 @@ name: Dispatch CI
 on:
   # $humanCron
   schedule:
-  - cron: '$cron'
+    - cron: '$cron'
 
 jobs:
   dispatch-ci:
