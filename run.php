@@ -10,7 +10,7 @@ use Symfony\Component\Console\Input\InputOption;
 
 // consts
 const CURRENT_CMS_MAJOR = '5';
-const BRANCH_OPTIONS = ['next-minor', 'next-patch'];
+const BRANCH_OPTIONS = ['next-minor', 'next-patch', 'github-default'];
 const DEFAULT_BRANCH = 'next-patch';
 const DEFAULT_ACCOUNT = 'creative-commoners';
 const DATA_DIR = '_data';

@@ -127,11 +127,15 @@ function extra_repositories()
  */
 function script_files($cmsMajor)
 {
-    if (!ctype_digit($cmsMajor)) {
-        $cmsMajor = "-$cmsMajor";
+    if ($cmsMajor === 'default-branch') {
+        $dir = 'scripts/default-branch';
+    } else {
+        if (!ctype_digit($cmsMajor)) {
+            $cmsMajor = "-$cmsMajor";
+        }
+        $scriptFiles = [];
+        $dir = "scripts/cms$cmsMajor";
     }
-    $scriptFiles = [];
-    $dir = "scripts/cms$cmsMajor";
     if (!file_exists($dir)) {
         warning("$dir does not exist, no CMS $cmsMajor specific scripts will be run");
         return $scriptFiles;
@@ -296,7 +300,7 @@ function output_repos_with_prs_created()
  *
  * Assumes that for each module there is only a single major version per cms-major version
  */
-function branch_to_checkout($branches, $currentBranch, $currentBranchCmsMajor, $cmsMajor, $branchOption)
+function branch_to_checkout($branches, $defaultBranch, $currentBranch, $currentBranchCmsMajor, $cmsMajor, $branchOption)
 {
     $offset = (int) $cmsMajor - (int) $currentBranchCmsMajor;
     $majorTarget = (int) $currentBranch + $offset;
@@ -304,6 +308,9 @@ function branch_to_checkout($branches, $currentBranch, $currentBranchCmsMajor, $
     usort($branches, 'version_compare');
     $branches = array_reverse($branches);
     switch ($branchOption) {
+        case 'github-default':
+            $branchToCheckout = $defaultBranch;
+            break;
         case 'next-patch':
             $branchToCheckout = array_values(array_filter(
                 $branches,

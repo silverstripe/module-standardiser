@@ -41,32 +41,39 @@ MS_GITHUB_TOKEN=abc123 php run.php update --cms-major=5 --branch=next-minor --dr
 | Flag | Description |
 | ---- | ------------|
 | --cms-major=[version] | The major version of CMS to use (default: 5) |
-| --branch=[type] | The branch type to use - next-minor\|next-patch (default: next-patch) |
-| --only=[modules] | Only include the specified modules (without account prefix) separated by commas e.g. silverstripe-config,silverstripe-assets |
-| --exclude=[modules] | Exclude the specified modules (without account prefix) separated by commas e.g. silverstripe-mfa,silverstripe-totp |
+| --branch=[type] | The branch type to use - `next-minor`\|`next-patch`\|`github-default` (default: `next-patch`) |
+| --only=[modules] | Only include the specified modules (without account prefix) separated by commas e.g. `silverstripe-config,silverstripe-assets` |
+| --exclude=[modules] | Exclude the specified modules (without account prefix) separated by commas e.g. `silverstripe-mfa,silverstripe-totp` |
 | --dry-run | Do not push to github or create pull-requests |
 | --account | GitHub account to use for creating pull-requests (default: creative-commoners) |
-| --no-delete | Do not delete _data and _modules directories before running |
+| --no-delete | Do not delete `_data` and `modules` directories before running |
 | --update-prs | Update existing open PRs instead of creating new PRs |
+
+**Note** that using `--branch=github-default` will only run scripts in the `scripts/default-branch` directory.
 
 ## GitHub API secondary rate limit
 
-You may hit a secondary GitHub rate limit because this tool may create too many pull-requests in a short space of time. 
-To help with this the tool will always output the urls of all pull-requests updated and also the repos that were 
+You may hit a secondary GitHub rate limit because this tool may create too many pull-requests in a short space of time.
+To help with this the tool will always output the urls of all pull-requests updated and also the repos that were
 updated so you can add them to the --exclude flag on subsequent re-runs.
 
 ## Adding new scripts
 
-Simply add new scripts to either `scripts/cms-<version>` to run on a specific cms-major or `scripts/cms-any` to run 
-on any cms-major and they will be automatically picked up and run when the tool is run. Code in the script will be 
+### Where to add your script
+
+- `scripts/cms-<version>` to run on a specific cms-major
+- `scripts/cms-any` to run on any cms-major
+- `scripts/default-branch` to only run on the default branch in GitHub
+
+Scripts will be automatically picked up and run when the tool is run. Code in the script will be
 passed through `eval()` on the module that is currently being processed.
 
-Make use of functions in `funcs_scripts.php` such as `write_file_if_not_exist()` and `read_file()` to access the 
+Make use of functions in `funcs_scripts.php` such as `write_file_if_not_exist()` and `read_file()` to access the
 correct files in the module that is currently being processed and also to ensure that console output is consistent.
 
 Do not use functions in `funcs_utils.php` as they are not intended to be used in scripts.
 
-Scripts will be automatically wrapped in an anoymous function so you do not need to worry about variables crossing 
+Scripts will be automatically wrapped in an anoymous function so you do not need to worry about variables crossing
 over into different scripts.
 
 ## Updating the tool when a new major version of CMS is updated

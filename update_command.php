@@ -56,10 +56,14 @@ $updateCommand = function(InputInterface $input, OutputInterface $output): int {
     }
 
     // script files
-    $scriptFiles = array_merge(
-        script_files('any'),
-        script_files($cmsMajor),
-    );
+    if ($branchOption === 'github-default') {
+        $scriptFiles = script_files('default-branch');
+    } else {
+        $scriptFiles = array_merge(
+            script_files('any'),
+            script_files($cmsMajor),
+        );
+    }
 
     // clone repos & run scripts
     foreach ($modules as $module) {
@@ -138,6 +142,7 @@ $updateCommand = function(InputInterface $input, OutputInterface $output): int {
             $currentBranchCmsMajor = current_branch_cms_major();
             $branchToCheckout = branch_to_checkout(
                 $allBranches,
+                $defaultBranch,
                 $currentBranch,
                 $currentBranchCmsMajor,
                 $cmsMajor,
@@ -150,7 +155,7 @@ $updateCommand = function(InputInterface $input, OutputInterface $output): int {
         cmd("git checkout $branchToCheckout", $MODULE_DIR);
 
         // ensure that this branch actually supports the cmsMajor we're targetting
-        if (current_branch_cms_major() !== $cmsMajor) {
+        if ($branchOption !== 'github-default' && current_branch_cms_major() !== $cmsMajor) {
             error("Branch $branchToCheckout does not support CMS major version $cmsMajor");
         }
 
@@ -196,7 +201,7 @@ $updateCommand = function(InputInterface $input, OutputInterface $output): int {
         // force pushing for cases when doing update-prs
         // double make check we're on a branch that we are willing to force push
         $currentBranch = cmd('git rev-parse --abbrev-ref HEAD', $MODULE_DIR);
-        if (!preg_match('#^pulls/[0-9\.]+/module\-standardiser\-[0-9]{10}$#', $currentBranch)) {
+        if (!preg_match('#^pulls/([0-9\.]+|master|main)/module\-standardiser\-[0-9]{10}$#', $currentBranch)) {
             error("Branch $currentBranch is not a pull-request branch");
         }
         cmd("git push -f -u pr-remote $prBranch", $MODULE_DIR);
