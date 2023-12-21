@@ -133,6 +133,18 @@ function is_module()
 }
 
 /**
+ * Determine if the module being processed is a source of documentation
+ *
+ * Example usage:
+ * is_docs()
+ */
+function is_docs()
+{
+    $moduleName = module_name();
+    return $moduleName === 'developer-docs' || $moduleName === 'silverstripe-userhelp-content';
+}
+
+/**
  * Determine if the module being processed is a gha-* repository e.g. gha-ci
  *
  * Example usage:
