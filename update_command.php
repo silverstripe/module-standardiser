@@ -15,16 +15,7 @@ $updateCommand = function(InputInterface $input, OutputInterface $output): int {
     validate_system();
 
     // setup directories
-    if (!$input->getOption('no-delete')) {
-        remove_dir(DATA_DIR);
-        remove_dir(MODULES_DIR);
-    }
-    if (!file_exists(DATA_DIR)) {
-        mkdir(DATA_DIR);
-    }
-    if (!file_exists(MODULES_DIR)) {
-        mkdir(MODULES_DIR);
-    }
+    setup_directories($input);
 
     // branch
     $branchOption = $input->getOption('branch') ?: DEFAULT_BRANCH;
@@ -36,24 +27,7 @@ $updateCommand = function(InputInterface $input, OutputInterface $output): int {
     $cmsMajor = $input->getOption('cms-major') ?: CURRENT_CMS_MAJOR;
 
     // modules
-    $modules = supported_modules($cmsMajor);
-    if ($cmsMajor === CURRENT_CMS_MAJOR) {
-        // only include extra_repositories() when using the current CMS major version because the extra rexpositories
-        // don't have multi majors branches supported e.g. gha-generate-matrix
-        $modules = array_merge($modules, extra_repositories());
-    }
-    if ($input->getOption('only')) {
-        $only = explode(',', $input->getOption('only'));
-        $modules = array_filter($modules, function ($module) use ($only) {
-            return in_array($module['repo'], $only);
-        });
-    }
-    if ($input->getOption('exclude')) {
-        $exclude = explode(',', $input->getOption('exclude'));
-        $modules = array_filter($modules, function ($module) use ($exclude) {
-            return !in_array($module['repo'], $exclude);
-        });
-    }
+    $modules = filtered_modules($cmsMajor, $input);
 
     // script files
     if ($branchOption === 'github-default') {

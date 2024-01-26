@@ -220,7 +220,7 @@ function github_token()
 /**
  * Makes a request to the github API
  */
-function github_api($url, $data = [])
+function github_api($url, $data = [], $httpMethod = '')
 {
     // silverstripe-themes has a kind of weird redirect only for api requests
     $url = str_replace('/silverstripe-themes/silverstripe-simple', '/silverstripe/silverstripe-simple', $url);
@@ -230,6 +230,9 @@ function github_api($url, $data = [])
     $ch = curl_init($url);
     curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
     curl_setopt($ch, CURLOPT_POST, !empty($data));
+    if ($httpMethod) {
+        curl_setopt($ch, CURLOPT_CUSTOMREQUEST, $httpMethod);
+    }
     curl_setopt($ch, CURLOPT_HTTPHEADER, [
         'User-Agent: silverstripe-module-standardiser',
         'Accept: application/vnd.github+json',
@@ -292,6 +295,24 @@ function output_repos_with_prs_created()
     $io->writeln('');
     $io->writeln('Repos with pull requests created (add to --exclude if you need to re-run):');
     $io->writeln(implode(',', $REPOS_WITH_PRS_CREATED));
+    $io->writeln('');
+}
+
+/**
+ * Outputs a list of repos that that had labels updated
+ * If there was an error with a run (probably a secondary rate limit), this can be
+ * copy pasted into the --exclude option for the next run to continue from where you left off
+ */
+function output_repos_with_labels_updated()
+{
+    if (running_unit_tests()) {
+        return;
+    }
+    global $REPOS_WITH_LABELS_UPDATED;
+    $io = io();
+    $io->writeln('');
+    $io->writeln('Repos with labels created (add to --exclude if you need to re-run):');
+    $io->writeln(implode(',', $REPOS_WITH_LABELS_UPDATED));
     $io->writeln('');
 }
 
@@ -406,4 +427,39 @@ function current_branch_cms_major(
         error('Could not work out what the current CMS major version is');
     }
     return (string) $cmsMajor;
+}
+
+function setup_directories($input, $dirs = [DATA_DIR, MODULES_DIR]) {
+    if (!$input->getOption('no-delete')) {
+        foreach ($dirs as $dir) {
+            remove_dir($dir);
+        }
+    }
+    foreach ($dirs as $dir) {
+        if (!file_exists($dir)) {
+            mkdir($dir);
+        }
+    }
+}
+
+function filtered_modules($cmsMajor, $input) {
+    $modules = supported_modules($cmsMajor);
+    if ($cmsMajor === CURRENT_CMS_MAJOR) {
+        // only include extra_repositories() when using the current CMS major version because the extra rexpositories
+        // don't have multi majors branches supported e.g. gha-generate-matrix
+        $modules = array_merge($modules, extra_repositories());
+    }
+    if ($input->getOption('only')) {
+        $only = explode(',', $input->getOption('only'));
+        $modules = array_filter($modules, function ($module) use ($only) {
+            return in_array($module['repo'], $only);
+        });
+    }
+    if ($input->getOption('exclude')) {
+        $exclude = explode(',', $input->getOption('exclude'));
+        $modules = array_filter($modules, function ($module) use ($exclude) {
+            return !in_array($module['repo'], $exclude);
+        });
+    }
+    return $modules;
 }
