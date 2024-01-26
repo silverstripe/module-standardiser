@@ -11,6 +11,8 @@ relevant branch e.g. `5` will be used depending on the command-line `--branch` o
 It will run all scripts in the `scripts/any` folder and then run all scripts in the applicable 
 `scripts/<cms-version>` folder depending on the command-line `--branch` option that's passed in.
 
+This tool can also be used to standardise GitHub labels on all supported repositories.
+
 ## GitHub Token
 
 This tool creates pull-request via the GitHub API. You need to set the `MS_GITHUB_TOKEN` environment variable in order 
@@ -22,12 +24,17 @@ then you will get a 404 error when attempting to create pull-requests.
 
 Delete this token once you have finished.
 
-## Usage
+## Installation
 
 ```bash
 git clone git@github.com:silverstripe/module-standardiser.git
 cd module-standardiser
 composer install
+```
+
+## Usage - Standardising module files
+
+```bash
 MS_GITHUB_TOKEN=<token> php run.php update <options>
 ```
 
@@ -36,11 +43,11 @@ MS_GITHUB_TOKEN=<token> php run.php update <options>
 MS_GITHUB_TOKEN=abc123 php run.php update --cms-major=5 --branch=next-minor --dry-run --only=silverstripe-config,silverstripe-assets
 ```
 
-## Command line options:
+### Command line options:
 
 | Flag | Description |
 | ---- | ------------|
-| --cms-major=[version] | The major version of CMS to use (default: 5) |
+| --cms-major=[version] | The major version of CMS to use (default: 5) which determines the list of supported modules to use |
 | --branch=[type] | The branch type to use - `next-minor`\|`next-patch`\|`github-default` (default: `next-patch`) |
 | --only=[modules] | Only include the specified modules (without account prefix) separated by commas e.g. `silverstripe-config,silverstripe-assets` |
 | --exclude=[modules] | Exclude the specified modules (without account prefix) separated by commas e.g. `silverstripe-mfa,silverstripe-totp` |
@@ -51,15 +58,15 @@ MS_GITHUB_TOKEN=abc123 php run.php update --cms-major=5 --branch=next-minor --dr
 
 **Note** that using `--branch=github-default` will only run scripts in the `scripts/default-branch` directory.
 
-## GitHub API secondary rate limit
+### GitHub API secondary rate limit
 
 You may hit a secondary GitHub rate limit because this tool may create too many pull-requests in a short space of time.
 To help with this the tool will always output the urls of all pull-requests updated and also the repos that were
 updated so you can add them to the --exclude flag on subsequent re-runs.
 
-## Adding new scripts
+### Adding new scripts
 
-### Where to add your script
+#### Where to add your script
 
 - `scripts/cms-<version>` to run on a specific cms-major
 - `scripts/cms-any` to run on any cms-major
@@ -75,6 +82,26 @@ Do not use functions in `funcs_utils.php` as they are not intended to be used in
 
 Scripts will be automatically wrapped in an anoymous function so you do not need to worry about variables crossing
 over into different scripts.
+
+## Usage - Standardising GitHub labels
+
+```bash
+MS_GITHUB_TOKEN=<token> php run.php labels <options>
+```
+
+**Example usage:**
+```bash
+MS_GITHUB_TOKEN=abc123 php run.php labels --dry-run --only=silverstripe-config,silverstripe-assets
+```
+
+### Command line options:
+
+| Flag | Description |
+| ---- | ------------|
+| --only=[modules] | Only include the specified modules (without account prefix) separated by commas e.g. `silverstripe-config,silverstripe-assets` |
+| --exclude=[modules] | Exclude the specified modules (without account prefix) separated by commas e.g. `silverstripe-mfa,silverstripe-totp` |
+| --dry-run | Do not update labels in GitHub, output to terminal only |
+| --no-delete | Do not delete `_data` directory before running |
 
 ## Updating the tool when a new major version of CMS is updated
 
