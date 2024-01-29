@@ -5,6 +5,22 @@ use Panlatent\CronExpressionDescriptor\ExpressionDescriptor;
 // These functions in scripts can be used in scripts
 
 /**
+ * Check that a directory exists relative to the root of the module being processed
+ *
+ * Example usage:
+ * check_dir_exists('src')
+ */
+function check_dir_exists($dirname) {
+    global $MODULE_DIR;
+    $path = "$MODULE_DIR/$dirname";
+    if (!is_dir($path)) {
+        info("Directory $path does not exist, though this should be OK");
+        return false;
+    }
+    return true;
+}
+
+/**
  * Check that a file exists relative to the root of the module being processed
  *
  * Example usage:
@@ -130,6 +146,28 @@ function is_module()
         && strpos($MODULE_DIR, '/vendor-plugin') === false
         && strpos($MODULE_DIR, '/eslint-config') === false
         && strpos($MODULE_DIR, '/webpack-config') === false;
+}
+
+/**
+ * Determine if the module being processed is a theme
+ *
+ * Example usage:
+ * is_theme()
+ */
+function is_theme()
+{
+    if (!check_file_exists('composer.json')) {
+        return false;
+    }
+
+    $contents = read_file('composer.json');
+    $json = json_decode($contents);
+    if (is_null($json)) {
+        $lastError = json_last_error();
+        error("Could not parse from composer.json - last error was $lastError");
+    }
+
+    return $json->type === 'silverstripe-theme';
 }
 
 /**
