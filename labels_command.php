@@ -40,6 +40,22 @@ const LABELS_RENAME = [
     'type/api-change' => 'type/api-break',
 ];
 
+// Repos that should not have labels updated because of a lack of API permissions because they are on
+// non-silverstripe GitHub accounts, or because they are not applicable
+const LABELS_EXCLUDE_GHREPOS = [
+    'colymba/GridFieldBulkEditingTools',
+    'composer/installers',
+    'dnadesign/silverstripe-elemental-subsites',
+    'hafriedlander/phockito',
+    'hafriedlander/silverstripe-phockito',
+    'lekoala/silverstripe-debugbar',
+    'tijsverkoyen/akismet',
+    'tractorcow-farm/silverstripe-fluent',
+    'tractorcow/classproxy',
+    'tractorcow/silverstripe-proxy-db',
+    'undefinedoffset/sortablegridfield',
+];
+
 $labelsCommand = function(InputInterface $input, OutputInterface $output): int {
     // This is the code that is executed when running the 'labels' command
 
@@ -61,7 +77,8 @@ $labelsCommand = function(InputInterface $input, OutputInterface $output): int {
     foreach ([$modulesCurrentMajor, $modulesPreviousMajor] as $modulesList) {
         foreach ($modulesList as $module) {
             $repo = $module['repo'];
-            if (in_array($repo, $repos)) {
+            $ghrepo = $module['ghrepo'];
+            if (in_array($repo, $repos) || in_array($ghrepo, LABELS_EXCLUDE_GHREPOS)) {
                 continue;
             }
             $modules[] = $module;
@@ -93,17 +110,28 @@ $labelsCommand = function(InputInterface $input, OutputInterface $output): int {
             // https://docs.github.com/en/rest/issues/labels#update-a-label
             if (array_key_exists($name, LABELS_RENAME)) {
                 $newName = LABELS_RENAME[$name];
-                info("Updating label $name to $newName in $repo");
-                if ($input->getOption('dry-run')) {
-                    info('Not updating label on GitHub because --dry-run option is set');
-                } else {
-                    github_api($url, ['new_name' => $newName], 'PATCH');
+                // Don't rename if a label with the new name already exists
+                $alreadyExists = false;
+                foreach ($labels as $label) {
+                    if ($newName === $label['name']) {
+                        $alreadyExists = true;
+                        break;
+                    }
                 }
-                $name = $newName;
-                // Update $url replacing the $name at the end with $newName
-                $url = substr($url, 0, strlen($url) - strlen($name)) . $newName;
-                $labels[$key]['name'] = $newName;
-                $labels[$key]['url'] = $url;
+                if (!$alreadyExists) {
+                    info("Updating label $name to $newName in $repo");
+                    if ($input->getOption('dry-run')) {
+                        info('Not updating label on GitHub because --dry-run option is set');
+                    } else {
+                        github_api($url, ['new_name' => $newName], 'PATCH');
+                    }
+                    $oldName = $name;
+                    $name = $newName;
+                    // Update $url replacing the $name at the end with $newName
+                    $url = substr($url, 0, strlen($url) - strlen($oldName)) . $newName;
+                    $labels[$key]['name'] = $newName;
+                    $labels[$key]['url'] = $url;
+                }
             }
 
             // Delete label

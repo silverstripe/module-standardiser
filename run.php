@@ -24,6 +24,7 @@ const PR_DESCRIPTION = 'This pull-request was created automatically by [module-s
 $MODULE_DIR = '';
 $PRS_CREATED = [];
 $REPOS_WITH_PRS_CREATED = [];
+$REPOS_WITH_LABELS_UPDATED = [];
 $OUT = null;
 
 // options
