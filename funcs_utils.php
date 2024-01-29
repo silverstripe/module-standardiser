@@ -88,6 +88,7 @@ function extra_repositories()
     $importantRepos = [
         'silverstripe/markdown-php-codesniffer',
         'silverstripe/silverstripe-standards',
+        'silverstripe/.github',
     ];
     $modules = [];
     // iterating to page 10 will be enough to get all the repos well into the future
