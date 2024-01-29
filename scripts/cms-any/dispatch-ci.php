@@ -23,13 +23,13 @@ on:
 
 jobs:
   dispatch-ci:
-  name: Dispatch CI
-  # Only run cron on the $account account
-  if: (github.event_name == 'schedule' && github.repository_owner == '$account') || (github.event_name != 'schedule')
-  runs-on: ubuntu-latest
-  steps:
-    - name: Dispatch CI
-      uses: silverstripe/gha-dispatch-ci@v1
+    name: Dispatch CI
+    # Only run cron on the $account account
+    if: (github.event_name == 'schedule' && github.repository_owner == '$account') || (github.event_name != 'schedule')
+    runs-on: ubuntu-latest
+    steps:
+      - name: Dispatch CI
+        uses: silverstripe/gha-dispatch-ci@v1
 EOT;
 
 if (check_file_exists('.github/workflows/ci.yml')) {
