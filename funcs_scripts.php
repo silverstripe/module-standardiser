@@ -123,29 +123,51 @@ function rename_file_if_exists($oldFilename, $newFilename)
  */
 function module_is_recipe()
 {
-    global $MODULE_DIR;
-    if ((strpos($MODULE_DIR, '/recipe-') !== false && strpos($MODULE_DIR, '/recipe-plugin') === false)
-        || strpos($MODULE_DIR, '/silverstripe-installer') !== false
-    ) {
-        return true;
+    if (!check_file_exists('composer.json')) {
+        return false;
     }
-    return false;
+
+    $contents = read_file('composer.json');
+    $json = json_decode($contents);
+    if (is_null($json)) {
+        $lastError = json_last_error();
+        error("Could not parse from composer.json - last error was $lastError");
+    }
+
+    return $json->type === 'silverstripe-recipe';
 }
 
 /**
- * Determine if the module being processed is something installed on a website e.g. silverstripe-admin, not gha-*
+ * Determine if the repository being processed is an actual silverstripe module e.g. silverstripe-admin, not gha-*
  *
  * Example usage:
  * is_module()
  */
 function is_module()
 {
-    global $MODULE_DIR;
-    return strpos($MODULE_DIR, '/gha-') === false
-        && strpos($MODULE_DIR, '/developer-docs') === false
-        && strpos($MODULE_DIR, '/vendor-plugin') === false
-        && strpos($MODULE_DIR, '/eslint-config') === false
-        && strpos($MODULE_DIR, '/webpack-config') === false;
+    if (!check_file_exists('composer.json')) {
+        return false;
+    }
+
+    $contents = read_file('composer.json');
+    $json = json_decode($contents);
+    if (is_null($json)) {
+        $lastError = json_last_error();
+        error("Could not parse from composer.json - last error was $lastError");
+    }
+
+    // config isn't technically a Silverstripe CMS module, but we treat it like one.
+    if ($json->name === 'silverstripe/config') {
+        return true;
+    }
+
+    $moduleTypes = [
+        'silverstripe-vendormodule',
+        'silverstripe-module',
+        'silverstripe-recipe',
+        'silverstripe-theme',
+    ];
+    return in_array($json->type, $moduleTypes);
 }
 
 /**
@@ -191,7 +213,7 @@ function is_docs()
 function is_gha_repository()
 {
     global $MODULE_DIR;
-    return strpos($MODULE_DIR, '/gha-') !== false;
+    return !is_module() && strpos($MODULE_DIR, '/gha-') !== false;
 }
 
 /**
