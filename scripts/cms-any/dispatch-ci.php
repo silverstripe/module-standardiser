@@ -32,6 +32,14 @@ jobs:
         uses: silverstripe/gha-dispatch-ci@v1
 EOT;
 
-if (check_file_exists('.github/workflows/ci.yml')) {
-    write_file_even_if_exists('.github/workflows/dispatch-ci.yml', $content);
+$dispatchCiPath = '.github/workflows/dispatch-ci.yml';
+$ciPath = '.github/workflows/ci.yml';
+$shouldHaveDispatchCi = (is_module() || is_composer_plugin()) && !is_docs() && !is_gha_repository();
+
+if ($shouldHaveDispatchCi) {
+  if (check_file_exists($ciPath)) {
+    write_file_even_if_exists($dispatchCiPath, $content);
+  }
+} else {
+  delete_file_if_exists($dispatchCiPath);
 }

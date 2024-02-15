@@ -54,6 +54,6 @@ if (check_file_exists('.github/workflows/merge-ups.yml')) {
     rename_file_if_exists('.github/workflows/merge-ups.yml', '.github/workflows/merge-up.yml');
 }
 
-if (!module_is_recipe()) {
+if (!module_is_recipe() && !is_meta_repo()) {
   write_file_even_if_exists('.github/workflows/merge-up.yml', $content);
 }
