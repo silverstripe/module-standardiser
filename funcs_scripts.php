@@ -134,7 +134,7 @@ function module_is_recipe()
         error("Could not parse from composer.json - last error was $lastError");
     }
 
-    return $json->type === 'silverstripe-recipe';
+    return $json->type ?? '' === 'silverstripe-recipe';
 }
 
 /**
@@ -167,7 +167,29 @@ function is_module()
         'silverstripe-recipe',
         'silverstripe-theme',
     ];
-    return in_array($json->type, $moduleTypes);
+    return in_array($json->type ?? '', $moduleTypes);
+}
+
+/**
+ * Determine if the module being processed is a composer plugin
+ *
+ * Example usage:
+ * is_composer_plugin()
+ */
+function is_composer_plugin()
+{
+    if (!check_file_exists('composer.json')) {
+        return false;
+    }
+
+    $contents = read_file('composer.json');
+    $json = json_decode($contents);
+    if (is_null($json)) {
+        $lastError = json_last_error();
+        error("Could not parse from composer.json - last error was $lastError");
+    }
+
+    return $json->type ?? '' === 'composer-plugin';
 }
 
 /**
@@ -190,6 +212,15 @@ function is_theme()
     }
 
     return $json->type === 'silverstripe-theme';
+}
+
+/**
+ * Determine if the module being processed is a meta repository
+ */
+function is_meta_repo()
+{
+    $moduleName = module_name();
+    return $moduleName === '.github';
 }
 
 /**

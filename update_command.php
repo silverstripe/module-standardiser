@@ -94,7 +94,10 @@ $updateCommand = function(InputInterface $input, OutputInterface $output): int {
         } else {
             // get all branches
             $allBranches = explode("\n", cmd('git branch -r', $MODULE_DIR));
+            $allBranches = array_filter($allBranches, fn($branch) => !str_contains($branch, 'HEAD ->'));
             $allBranches = array_map(fn($branch) => trim(str_replace('origin/', '', $branch)), $allBranches);
+            // reset index
+            $allBranches = array_values($allBranches);
 
             // reset to the default branch so that we can then calculate the correct branch to checkout
             // this is needed for scenarios where we may be on something unparsable like pulls/5/lorem-ipsum
@@ -102,26 +105,30 @@ $updateCommand = function(InputInterface $input, OutputInterface $output): int {
             $defaultBranch = cmd($cmd, $MODULE_DIR);
             cmd("git checkout $defaultBranch", $MODULE_DIR);
 
-            // checkout the branch to run scripts over
-            $currentBranch = cmd('git rev-parse --abbrev-ref HEAD', $MODULE_DIR);
-            // ensure that we're on a standard next-minor style branch
-            if (!ctype_digit($currentBranch)) {
-                $tmp = array_filter($allBranches, fn($branch) => ctype_digit($branch));
-                if (empty($tmp)) {
-                    error('Could not find a next-minor style branch');
+            if (is_meta_repo()) {
+                $branchToCheckout = $allBranches[0];
+            } else {
+                // checkout the branch to run scripts over
+                $currentBranch = cmd('git rev-parse --abbrev-ref HEAD', $MODULE_DIR);
+                // ensure that we're on a standard next-minor style branch
+                if (!ctype_digit($currentBranch)) {
+                    $tmp = array_filter($allBranches, fn($branch) => ctype_digit($branch));
+                    if (empty($tmp)) {
+                        error('Could not find a next-minor style branch');
+                    }
+                    $currentBranch = max($tmp);
+                    cmd("git checkout $currentBranch", $MODULE_DIR);
                 }
-                $currentBranch = max($tmp);
-                cmd("git checkout $currentBranch", $MODULE_DIR);
+                $currentBranchCmsMajor = current_branch_cms_major();
+                $branchToCheckout = branch_to_checkout(
+                    $allBranches,
+                    $defaultBranch,
+                    $currentBranch,
+                    $currentBranchCmsMajor,
+                    $cmsMajor,
+                    $branchOption
+                );
             }
-            $currentBranchCmsMajor = current_branch_cms_major();
-            $branchToCheckout = branch_to_checkout(
-                $allBranches,
-                $defaultBranch,
-                $currentBranch,
-                $currentBranchCmsMajor,
-                $cmsMajor,
-                $branchOption
-            );
             if (!in_array($branchToCheckout, $allBranches)) {
                 error("Could not find branch to checkout for $repo using --branch=$branchOption");
             }
