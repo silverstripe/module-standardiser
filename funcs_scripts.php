@@ -309,15 +309,26 @@ function human_cron(string $cron): string
 }
 
 /**
- * Creates a predicatable random int between 0 and $max based on the module name to be used with the % mod operator.
+ * Creates a predicatable random int between 0 and $max based on the module name and file name script
+ * is called with to be used with the % mod operator.
  * $offset variable will offset both the min (0) and $max. e.g. $offset of 1 with a max of 27 will return an int
  * between 1 and 28
- * Note that this will return the exact same value every time it is called for a given module.
+ * Note that this will return the exact same value every time it is called for a given filename in a given module
  */
 function predictable_random_int($max, $offset = 0): int
 {
     global $MODULE_DIR;
-    $chars = str_split($MODULE_DIR);
+    $callingFile = debug_backtrace()[0]['file'];
+    // remove absolute path e.g. /home/myuser/...
+    $moduleStandardiserDir = basename(__DIR__);
+    $dirQuoted = preg_quote($moduleStandardiserDir);
+    // double $dirQuoted is for github actions CI where there which will have a directory strcture
+    // with /module-standardiser/module-standardiser/...
+    if (!preg_match("#/$dirQuoted/$dirQuoted/(.+)$#", $callingFile, $matches)) {
+        preg_match("#/$dirQuoted/(.+)$#", $callingFile, $matches);
+    }
+    $relativePath = $matches[1];
+    $chars = str_split("$MODULE_DIR-$relativePath");
     $codes = array_map(fn($c) => ord($c), $chars);
     mt_srand(array_sum($codes));
     return mt_rand(0, $max) + $offset;
