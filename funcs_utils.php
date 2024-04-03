@@ -88,6 +88,7 @@ function extra_repositories()
     $importantRepos = [
         'silverstripe/markdown-php-codesniffer',
         'silverstripe/silverstripe-standards',
+        'silverstripe/documentation-lint',
         'silverstripe/.github',
     ];
     $modules = [];
