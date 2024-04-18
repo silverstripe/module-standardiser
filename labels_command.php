@@ -29,6 +29,7 @@ const LABELS_COLORS = [
     'type/userhelp' => 'c5def5',
     'type/UX' => '006b75',
     'type/other' => '975515',
+    'type/i18n' => 'ae177d',
 ];
 
 // Rename existing labels 'from' => 'to'
