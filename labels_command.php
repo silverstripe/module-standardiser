@@ -1,5 +1,6 @@
 <?php
 
+use SilverStripe\SupportedModules\MetaData;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Command\Command;
@@ -73,8 +74,8 @@ $labelsCommand = function(InputInterface $input, OutputInterface $output): int {
     // modules
     $modules = [];
     $repos = [];
-    $modulesCurrentMajor = filtered_modules(CURRENT_CMS_MAJOR, $input);
-    $modulesPreviousMajor = filtered_modules(CURRENT_CMS_MAJOR - 1, $input);
+    $modulesCurrentMajor = filtered_modules(MetaData::HIGHEST_STABLE_CMS_MAJOR, $input);
+    $modulesPreviousMajor = filtered_modules(MetaData::HIGHEST_STABLE_CMS_MAJOR - 1, $input);
     foreach ([$modulesCurrentMajor, $modulesPreviousMajor] as $modulesList) {
         foreach ($modulesList as $module) {
             $repo = $module['repo'];

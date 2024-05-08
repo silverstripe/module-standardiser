@@ -1,6 +1,7 @@
 <?php
 
 use PHPUnit\Framework\TestCase;
+use SilverStripe\SupportedModules\MetaData;
 
 class FuncsUtilsTest extends TestCase
 {
@@ -40,6 +41,8 @@ class FuncsUtilsTest extends TestCase
      */
     public function testCurrentBranchCmsMajor($expected, $composerJson)
     {
+        global $GITHUB_REF;
+        $GITHUB_REF = 'random/repo';
         $actual = current_branch_cms_major($composerJson);
         $this->assertSame($expected, $actual);
     }
@@ -56,7 +59,7 @@ class FuncsUtilsTest extends TestCase
             ['5', json_encode(['require' => ['silverstripe/assets' => '^2']])],
             ['4', json_encode(['require' => ['php' => '^7.4']])],
             ['5', json_encode(['require' => ['php' => '^8.1']])],
-            ['', json_encode(['require' => ['silverstripe/lorem-ipsum' => '^2']])],
+            [MetaData::HIGHEST_STABLE_CMS_MAJOR, json_encode(['require' => ['silverstripe/lorem-ipsum' => '^2']])],
         ];
     }
 }
