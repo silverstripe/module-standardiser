@@ -1,6 +1,7 @@
 <?php
 
 use Panlatent\CronExpressionDescriptor\ExpressionDescriptor;
+use SilverStripe\SupportedModules\MetaData;
 
 // These functions in scripts can be used in scripts
 
@@ -243,8 +244,14 @@ function is_docs()
  */
 function is_gha_repository()
 {
-    global $MODULE_DIR;
-    return !is_module() && strpos($MODULE_DIR, '/gha-') !== false;
+    global $GITHUB_REF;
+    return in_array(
+        $GITHUB_REF,
+        array_column(
+            MetaData::getAllRepositoryMetaData()[MetaData::CATEGORY_WORKFLOW],
+            'github'
+        )
+    );
 }
 
 /**
@@ -257,8 +264,8 @@ function is_gha_repository()
  */
 function module_name()
 {
-    global $MODULE_DIR;
-    $parts = explode('/', $MODULE_DIR);
+    global $GITHUB_REF;
+    $parts = explode('/', $GITHUB_REF);
     return end($parts);
 }
 
@@ -270,7 +277,7 @@ function module_name()
  */
 function module_is_one_of($repos)
 {
-    global $MODULE_DIR;
+    global $GITHUB_REF;
     if (!is_array($repos)) {
         error('repos is not an array');
     }
@@ -278,7 +285,7 @@ function module_is_one_of($repos)
         if (!is_string($repo)) {
             error('repo is not a string');
         }
-        if (strpos($MODULE_DIR, "/$repo") !== false) {
+        if (strpos($GITHUB_REF, "/$repo") !== false) {
             return true;
         }
     }
@@ -293,11 +300,8 @@ function module_is_one_of($repos)
  */
 function module_account()
 {
-    $s = read_file('.git/config');
-    if (!preg_match('#github.com:([^/]+)/#', $s, $matches)) {
-        error('Could not determine github account');
-    }
-    return $matches[1];
+    global $GITHUB_REF;
+    return explode('/', $GITHUB_REF)[0];
 }
 
 /**

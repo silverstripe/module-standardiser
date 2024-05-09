@@ -6,11 +6,11 @@ include 'funcs_utils.php';
 include 'update_command.php';
 include 'labels_command.php';
 
+use SilverStripe\SupportedModules\MetaData;
 use Symfony\Component\Console\Application;
 use Symfony\Component\Console\Input\InputOption;
 
 // consts
-const CURRENT_CMS_MAJOR = '5';
 const BRANCH_OPTIONS = ['next-minor', 'next-patch', 'github-default'];
 const DEFAULT_BRANCH = 'next-patch';
 const DEFAULT_ACCOUNT = 'creative-commoners';
@@ -22,6 +22,7 @@ const PR_DESCRIPTION = 'This pull-request was created automatically by [module-s
 
 // global variables
 $MODULE_DIR = '';
+$GITHUB_REF = '';
 $PRS_CREATED = [];
 $REPOS_WITH_PRS_CREATED = [];
 $REPOS_WITH_LABELS_UPDATED = [];
@@ -32,7 +33,7 @@ $optionCmsMajor = [
     'cms-major',
     null,
     InputOption::VALUE_REQUIRED,
-    'The CMS major version to use (default: '. CURRENT_CMS_MAJOR .')'
+    'The CMS major version to use (default: '. MetaData::HIGHEST_STABLE_CMS_MAJOR .')'
 ];
 $optionBranch = [
     'branch',

@@ -102,7 +102,3 @@ MS_GITHUB_TOKEN=abc123 php run.php labels --dry-run --only=silverstripe-config,s
 | --exclude=[modules] | Exclude the specified modules (without account prefix) separated by commas e.g. `silverstripe-mfa,silverstripe-totp` |
 | --dry-run | Do not update labels in GitHub, output to terminal only |
 | --no-delete | Do not delete `_data` directory before running |
-
-## Updating the tool when a new major version of CMS is updated
-
-Update the `CURRENT_CMS_MAJOR` constant in `run.php`

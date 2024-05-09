@@ -1,5 +1,7 @@
 <?php
 
+use SilverStripe\SupportedModules\BranchLogic;
+use SilverStripe\SupportedModules\MetaData;
 use Symfony\Component\Console\Output\NullOutput;
 use Symfony\Component\Console\Input\ArgvInput;
 use Symfony\Component\Console\Style\SymfonyStyle;
@@ -44,85 +46,6 @@ function write_file($path, $contents)
     }
     file_put_contents($path, $contents);
     info("Wrote to $path");
-}
-
-/**
- * Returns all the supported modules for a particular cms major version
- * Will download the list if it doesn't exist
- */
-function supported_modules($cmsMajor)
-{
-    $filename = "_data/modules-cms$cmsMajor.json";
-    if (!file_exists($filename)) {
-        $url = "https://raw.githubusercontent.com/silverstripe/supported-modules/$cmsMajor/modules.json";
-        info("Downloading $url to $filename");
-        $contents = file_get_contents($url);
-        file_put_contents($filename, $contents);
-    }
-    $json = json_decode(file_get_contents($filename), true);
-    if (is_null($json)) {
-        $lastError = json_last_error();
-        error("Could not parse from $filename - last error was $lastError");
-    }
-    $modules = [];
-    foreach ($json as $module) {
-        $ghrepo = $module['github'];
-        $modules[] = [
-            'ghrepo' => $ghrepo,
-            'account' => explode('/', $ghrepo)[0],
-            'repo' => explode('/', $ghrepo)[1],
-            'cloneUrl' => "git@github.com:$ghrepo.git",
-        ];
-    }
-    return $modules;
-}
-
-/**
- * Hardcoded list of non-supported, additional repositories to standardise (e.g. silverstripe/gha-*)
- *
- * Repositories in this list should only have a single supported major version
- * This will only be included if the $cmsMajor is the CURRENT_CMS_MAJOR
- */
-function extra_repositories()
-{
-    $importantRepos = [
-        'silverstripe/markdown-php-codesniffer',
-        'silverstripe/silverstripe-standards',
-        'silverstripe/documentation-lint',
-        'silverstripe/.github',
-    ];
-    $modules = [];
-    // iterating to page 10 will be enough to get all the repos well into the future
-    for ($i = 0; $i < 10; $i++) {
-        $path = "_data/extra_repositories-$i.json";
-        if (file_exists($path)) {
-            info("Reading local data from $path");
-            $json = json_decode(file_get_contents($path), true);
-        } else {
-            $json = github_api("https://api.github.com/orgs/silverstripe/repos?per_page=100&page=$i");
-            file_put_contents($path, json_encode($json, JSON_UNESCAPED_SLASHES | JSON_PRETTY_PRINT));
-        }
-        if (empty($json)) {
-            break;
-        }
-        foreach ($json as $repo) {
-            if ($repo['archived']) {
-                continue;
-            }
-            $ghrepo = $repo['full_name'];
-            // Only include repos we care about
-            if (!in_array($ghrepo, $importantRepos) && strpos($ghrepo, '/gha-') === false) {
-                continue;
-            }
-            $modules[] = [
-                'ghrepo' => $ghrepo,
-                'account' => explode('/', $ghrepo)[0],
-                'repo' => explode('/', $ghrepo)[1],
-                'cloneUrl' => "git@github.com:$ghrepo.git",
-            ];
-        }
-    }
-    return $modules;
 }
 
 /**
@@ -349,85 +272,45 @@ function branch_to_checkout($branches, $defaultBranch, $currentBranch, $currentB
 }
 
 /**
- * Uses composer.json to workout the current branch cms major version
- *
- * If composer.json does not exist then it's assumed to be CURRENT_CMS_MAJOR
+ * Works out the current branch cms major version
  */
 function current_branch_cms_major(
     // this param is only used for unit testing
     string $composerJson = ''
 ) {
-    global $MODULE_DIR;
+    global $MODULE_DIR, $GITHUB_REF;
 
-    // Some repositories don't have a valid matching CMS major
-    $ignoreCMSMajor = [
-        '/silverstripe-simple',
-        '/markdown-php-codesniffer',
-    ];
-    foreach ($ignoreCMSMajor as $ignore) {
-        if (strpos($MODULE_DIR, $ignore) !== false) {
-            return CURRENT_CMS_MAJOR;
-        }
+    // This repo matches every major and matches start at the lowest - but we only want the highest stable.
+    if ($GITHUB_REF === 'silverstripe/silverstripe-simple') {
+        return MetaData::HIGHEST_STABLE_CMS_MAJOR;
     }
 
     if ($composerJson) {
         $contents = $composerJson;
     } elseif (check_file_exists('composer.json')) {
         $contents = read_file('composer.json');
-    } else {
-        return CURRENT_CMS_MAJOR;
     }
-
-    // special logic for developer-docs
-    if (strpos($MODULE_DIR, '/developer-docs') !== false) {
-        $currentBranch = cmd('git rev-parse --abbrev-ref HEAD', $MODULE_DIR);
-        if (!preg_match('#^(pulls/)?([0-9]+)(\.[0-9]+)?(/|$)#', $currentBranch, $matches)) {
-            error("Could not work out current major for developer-docs from branch $currentBranch");
-        }
-        return $matches[2];
-    }
-
-    $json = json_decode($contents);
-    if (is_null($json)) {
+    $composerJson = json_decode($contents);
+    if (is_null($composerJson)) {
         $lastError = json_last_error();
         error("Could not parse from composer.json - last error was $lastError");
     }
-    $matchedOnBranchThreeLess = false;
-    $version = preg_replace('#[^0-9\.]#', '', $json->require->{'silverstripe/framework'} ?? '');
-    if (!$version) {
-        $version = preg_replace('#[^0-9\.]#', '', $json->require->{'silverstripe/cms'} ?? '');
-    }
-    if (!$version) {
-        $version = preg_replace('#[^0-9\.]#', '', $json->require->{'silverstripe/mfa'} ?? '');
-    }
-    if (!$version) {
-        $version = preg_replace('#[^0-9\.]#', '', $json->require->{'silverstripe/assets'} ?? '');
-        if ($version) {
-            $matchedOnBranchThreeLess = true;
+
+    $repoData = MetaData::getMetaDataForRepository($GITHUB_REF);
+    $branchMajor = '';
+    // If we're running unit tests, $MODULE_DIR will be some fake value with causes errors here
+    if (!running_unit_tests()) {
+        $currentBranch = cmd('git rev-parse --abbrev-ref HEAD', $MODULE_DIR);
+        if (preg_match('#^(pulls/)?([0-9]+)(\.[0-9]+)?(/|$)#', $currentBranch, $matches)) {
+            $branchMajor = $matches[2];
         }
     }
-    if (!$version) {
-        $version = preg_replace('#[^0-9\.]#', '', $json->require->{'cwp/starter-theme'} ?? '');
-        if ($version) {
-            $version += 1;
-        }
-    }
-    $cmsMajor = '';
-    if (preg_match('#^([0-9]+)+\.?[0-9]*$#', $version, $matches)) {
-        $cmsMajor = $matches[1];
-        if ($matchedOnBranchThreeLess) {
-            $cmsMajor += 3;
-        }
-    } else {
-        $phpVersion = $json->require->{'php'} ?? '';
-        if (substr($phpVersion,0, 4) === '^7.4') {
-            $cmsMajor = 4;
-        } elseif (substr($phpVersion,0, 4) === '^8.1') {
-            $cmsMajor = 5;
-        }
-    }
+    $cmsMajor = BranchLogic::getCmsMajor($repoData, $branchMajor, $composerJson, true);
+
     if ($cmsMajor === '') {
-        error('Could not work out what the current CMS major version is');
+        // The supported modules metadata has a bunch of repos with no specific major version mapping.
+        // Just assume they're on the highest major in that case.
+        return MetaData::HIGHEST_STABLE_CMS_MAJOR;
     }
     return (string) $cmsMajor;
 }
@@ -445,13 +328,18 @@ function setup_directories($input, $dirs = [DATA_DIR, MODULES_DIR]) {
     }
 }
 
-function filtered_modules($cmsMajor, $input) {
-    $modules = supported_modules($cmsMajor);
-    if ($cmsMajor === CURRENT_CMS_MAJOR) {
-        // only include extra_repositories() when using the current CMS major version because the extra rexpositories
-        // don't have multi majors branches supported e.g. gha-generate-matrix
-        $modules = array_merge($modules, extra_repositories());
-    }
+function filtered_modules($cmsMajor, $input)
+{
+    $repos = MetaData::removeReposNotInCmsMajor(
+        MetaData::getAllRepositoryMetaData(false),
+        $cmsMajor,
+        // For repositories that only have a single support branch such as gha-generate-matrix, only include
+        // them when updating the currently supported CMS major.
+        $cmsMajor === MetaData::HIGHEST_STABLE_CMS_MAJOR
+    );
+
+    $modules = convert_repos_data_to_modules($repos);
+
     if ($input->getOption('only')) {
         $only = explode(',', $input->getOption('only'));
         $modules = array_filter($modules, function ($module) use ($only) {
@@ -463,6 +351,21 @@ function filtered_modules($cmsMajor, $input) {
         $modules = array_filter($modules, function ($module) use ($exclude) {
             return !in_array($module['repo'], $exclude);
         });
+    }
+    return $modules;
+}
+
+function convert_repos_data_to_modules(array $repos)
+{
+    $modules = [];
+    foreach ($repos as $repo) {
+        $ghrepo = $repo['github'];
+        $modules[] = [
+            'ghrepo' => $ghrepo,
+            'account' => explode('/', $ghrepo)[0],
+            'repo' => explode('/', $ghrepo)[1],
+            'cloneUrl' => "git@github.com:$ghrepo.git",
+        ];
     }
     return $modules;
 }

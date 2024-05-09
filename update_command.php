@@ -1,5 +1,6 @@
 <?php
 
+use SilverStripe\SupportedModules\MetaData;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Command\Command;
@@ -8,7 +9,7 @@ $updateCommand = function(InputInterface $input, OutputInterface $output): int {
     // This is the code that is executed when running the 'update' command
 
     // variables
-    global $MODULE_DIR, $OUT, $PRS_CREATED, $REPOS_WITH_PRS_CREATED;
+    global $MODULE_DIR, $GITHUB_REF, $OUT, $PRS_CREATED, $REPOS_WITH_PRS_CREATED;
     $OUT = $output;
 
     // validate system is ready
@@ -24,7 +25,7 @@ $updateCommand = function(InputInterface $input, OutputInterface $output): int {
     }
 
     // CMS major version to use
-    $cmsMajor = $input->getOption('cms-major') ?: CURRENT_CMS_MAJOR;
+    $cmsMajor = $input->getOption('cms-major') ?: MetaData::HIGHEST_STABLE_CMS_MAJOR;
 
     // modules
     $modules = filtered_modules($cmsMajor, $input);
@@ -45,6 +46,7 @@ $updateCommand = function(InputInterface $input, OutputInterface $output): int {
         $repo = $module['repo'];
         $cloneUrl = $module['cloneUrl'];
         $MODULE_DIR =  MODULES_DIR . "/$repo";
+        $GITHUB_REF = "$account/$repo";
         // clone repo
         // always clone the actual remote even when doing update-prs even though this is slower
         // reason is because we read origin in .git/config to workout the actual $account in
@@ -83,7 +85,7 @@ $updateCommand = function(InputInterface $input, OutputInterface $output): int {
             $branchToCheckout = $allBranches[0];
             $branchToCheckout = preg_replace('#^pr\-remote/#', '', $branchToCheckout);
             $prBranch = $branchToCheckout;
-            $allPRs = github_api("https://api.github.com/repos/$account/$repo/pulls?per_page=100");
+            $allPRs = github_api("https://api.github.com/repos/$GITHUB_REF/pulls?per_page=100");
             $allPRs = array_filter($allPRs, function($pr) use($prBranch) {
                  return $pr['title'] === PR_TITLE && $pr['head']['ref'] === $prBranch && $pr['state'] === 'open';
             });
@@ -189,7 +191,7 @@ $updateCommand = function(InputInterface $input, OutputInterface $output): int {
         // create pull-request using github api
         if (!$input->getOption('update-prs')) {
             // https://docs.github.com/en/rest/pulls/pulls?apiVersion=2022-11-28#create-a-pull-request
-            $responseJson = github_api("https://api.github.com/repos/$account/$repo/pulls", [
+            $responseJson = github_api("https://api.github.com/repos/$GITHUB_REF/pulls", [
                 'title' => PR_TITLE,
                 'body' => PR_DESCRIPTION,
                 'head' => "$prAccount:$prBranch",
