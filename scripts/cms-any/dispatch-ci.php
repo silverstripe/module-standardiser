@@ -21,12 +21,17 @@ on:
   schedule:
     - cron: '$cron'
 
+permissions: {}
+
 jobs:
   dispatch-ci:
     name: Dispatch CI
     # Only run cron on the $account account
     if: (github.event_name == 'schedule' && github.repository_owner == '$account') || (github.event_name != 'schedule')
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      actions: write
     steps:
       - name: Dispatch CI
         uses: silverstripe/gha-dispatch-ci@v1

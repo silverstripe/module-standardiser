@@ -38,12 +38,17 @@ on:
     - cron: '$cron'
   workflow_dispatch:
 
+permissions: {}
+
 jobs:
   merge-up:
     name: Merge-up
     # Only run cron on the $account account
     if: (github.event_name == 'schedule' && github.repository_owner == '$account') || (github.event_name != 'schedule')
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      actions: write
     steps:
       - name: Merge-up
         uses: silverstripe/gha-merge-up@v1

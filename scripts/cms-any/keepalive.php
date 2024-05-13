@@ -20,12 +20,16 @@ on:
     - cron: '$cron'
   workflow_dispatch:
 
+permissions: {}
+
 jobs:
   keepalive:
     name: Keepalive
     # Only run cron on the $account account
     if: (github.event_name == 'schedule' && github.repository_owner == '$account') || (github.event_name != 'schedule')
     runs-on: ubuntu-latest
+    permissions:
+      actions: write
     steps:
       - name: Keepalive
         uses: silverstripe/gha-keepalive@v1
