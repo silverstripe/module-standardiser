@@ -17,12 +17,18 @@ on:
   schedule:
     - cron: '$runOnMinute $runOnHour $runOnDay */3 *'
 
+permissions: {}
+
 jobs:
   update-js:
     name: Update JS
     # Only run cron on the $account account
     if: (github.event_name == 'schedule' && github.repository_owner == '$account') || (github.event_name != 'schedule')
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-request: write
+      actions: write
     steps:
       - name: Update JS
         uses: silverstripe/gha-update-js@v1
