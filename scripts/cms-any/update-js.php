@@ -27,7 +27,7 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: write
-      pull-request: write
+      pull-requests: write
       actions: write
     steps:
       - name: Update JS
