@@ -1,7 +1,7 @@
 <?php
 
 // Only valid for non-theme modules
-if (!is_module() || is_theme()) {
+if (!is_module() || is_theme() || module_is_recipe()) {
     return;
 }
 
