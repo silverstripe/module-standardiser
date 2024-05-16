@@ -53,7 +53,7 @@ MS_GITHUB_TOKEN=abc123 php run.php update --cms-major=5 --branch=next-minor --dr
 | --exclude=[modules] | Exclude the specified modules (without account prefix) separated by commas e.g. `silverstripe-mfa,silverstripe-totp` |
 | --dry-run | Do not push to github or create pull-requests |
 | --account | GitHub account to use for creating pull-requests (default: creative-commoners) |
-| --no-delete | Do not delete `_data` and `modules` directories before running |
+| --no-delete | Do not delete `_data` and `_modules` directories before running |
 | --update-prs | Update existing open PRs instead of creating new PRs |
 
 **Note** that using `--branch=github-default` will only run scripts in the `scripts/default-branch` directory.
