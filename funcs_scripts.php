@@ -135,7 +135,7 @@ function module_is_recipe()
         error("Could not parse from composer.json - last error was $lastError");
     }
 
-    return $json->type ?? '' === 'silverstripe-recipe';
+    return ($json->type ?? '') === 'silverstripe-recipe';
 }
 
 /**
@@ -190,7 +190,7 @@ function is_composer_plugin()
         error("Could not parse from composer.json - last error was $lastError");
     }
 
-    return $json->type ?? '' === 'composer-plugin';
+    return ($json->type ?? '') === 'composer-plugin';
 }
 
 /**

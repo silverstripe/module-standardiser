@@ -50,6 +50,7 @@ function write_file($path, $contents)
 
 /**
  * Returns a list of all scripts files to run against a particular cms major version
+ * Scripts will be alphabetically sorted
  */
 function script_files($cmsMajor)
 {
@@ -78,6 +79,7 @@ function script_files($cmsMajor)
         }
         closedir($handle);
     }
+    sort($scriptFiles);
     return $scriptFiles;
 }
 
