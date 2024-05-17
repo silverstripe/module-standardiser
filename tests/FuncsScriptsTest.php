@@ -6,17 +6,18 @@ class FuncsScriptsTest extends TestCase
 {
     public function testPredictableRandomInt()
     {
-        global $MODULE_DIR;
-        $MODULE_DIR = 'lorem';
-        $this->assertSame(0, predictable_random_int(15));
-        $this->assertSame(25, predictable_random_int(30));
-        $this->assertSame(45, predictable_random_int(30, 20));
-        $MODULE_DIR = 'donuts';
-        $this->assertSame(13, predictable_random_int(15));
-        // use eval to simulate calling from a different file
-        // it will suffix "(19) : eval()'d code" to the calling file in debug_backtrace()
-        $ret = null;
-        eval('$ret = predictable_random_int(15);');
-        $this->assertSame(2, $ret);
+        global $GITHUB_REF;
+        // set $GITHUB_REF because by module_name() which is used by predictable_random_int()
+        $GITHUB_REF = 'myaccount/lorem';
+        $this->assertSame(1, predictable_random_int('test-script', 15));
+        // Setting a higher max does more than just add to the result, it's somewhat random
+        $this->assertSame(23, predictable_random_int('test-script', 30));
+        // Setting an offset simply adds to the result of the same max as above
+        $this->assertSame(43, predictable_random_int('test-script', 30, 20));
+        // Changing $GITHUB_REF will change the result
+        $GITHUB_REF = 'myaccount/donuts';
+        $this->assertSame(15, predictable_random_int('test-script', 15));
+        // Changing the script name will change the result
+        $this->assertSame(6, predictable_random_int('different-script', 15));
     }
 }

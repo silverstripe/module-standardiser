@@ -47,6 +47,7 @@ $updateCommand = function(InputInterface $input, OutputInterface $output): int {
         $cloneUrl = $module['cloneUrl'];
         $MODULE_DIR =  MODULES_DIR . "/$repo";
         $GITHUB_REF = "$account/$repo";
+
         // clone repo
         // always clone the actual remote even when doing update-prs even though this is slower
         // reason is because we read origin in .git/config to workout the actual $account in
