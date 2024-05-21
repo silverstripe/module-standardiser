@@ -1,11 +1,11 @@
 <?php
 
 // run on a day of the month up to the 28th
-$runOnDay = predictable_random_int(27, 1);
+$runOnDay = predictable_random_int('keepalive', 27, 1);
 // run at a random hour of the day
-$runOnHour = predictable_random_int(23);
+$runOnHour = predictable_random_int('keepalive', 23);
 // run at a random minute of the hour rounded to 5 minutes
-$runOnMinute = predictable_random_int(11) * 5;
+$runOnMinute = predictable_random_int('keepalive', 11) * 5;
 
 $cron = "$runOnMinute $runOnHour $runOnDay * *";
 $humanCron = human_cron($cron);

@@ -287,13 +287,14 @@ function current_branch_cms_major(
         return MetaData::HIGHEST_STABLE_CMS_MAJOR;
     }
 
+    $contents = '';
     if ($composerJson) {
         $contents = $composerJson;
     } elseif (check_file_exists('composer.json')) {
         $contents = read_file('composer.json');
     }
     $composerJson = json_decode($contents);
-    if (is_null($composerJson)) {
+    if (is_null($composerJson) && check_file_exists('composer.json')) {
         $lastError = json_last_error();
         error("Could not parse from composer.json - last error was $lastError");
     }

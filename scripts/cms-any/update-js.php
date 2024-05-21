@@ -2,9 +2,9 @@
 $account = module_account();
 
 // run at a random hour of the day
-$runOnHour = predictable_random_int(23);
+$runOnHour = predictable_random_int('update-js', 23);
 // run at a random minute of the hour rounded to 5 minutes
-$runOnMinute = predictable_random_int(11) * 5;
+$runOnMinute = predictable_random_int('update-js', 11) * 5;
 // run on a 1st of the month
 $runOnDay = 1;
 
@@ -34,6 +34,6 @@ jobs:
         uses: silverstripe/gha-update-js@v1
 EOT;
 
-if (check_file_exists('package.json')) {
+if (check_file_exists('package.json') && check_file_exists('yarn.lock')) {
     write_file_even_if_exists('.github/workflows/update-js.yml', $content);
 }

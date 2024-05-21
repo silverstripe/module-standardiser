@@ -150,6 +150,10 @@ function is_module()
         return false;
     }
 
+    if (is_gha_repository()) {
+        return false;
+    }
+
     $contents = read_file('composer.json');
     $json = json_decode($contents);
     if (is_null($json)) {
@@ -158,7 +162,7 @@ function is_module()
     }
 
     // config isn't technically a Silverstripe CMS module, but we treat it like one.
-    if ($json->name === 'silverstripe/config') {
+    if (($json->name ?? '') === 'silverstripe/config') {
         return true;
     }
 
@@ -238,6 +242,7 @@ function is_docs()
 
 /**
  * Determine if the module being processed is a gha-* repository e.g. gha-ci
+ * aka "WORKFLOW"
  *
  * Example usage:
  * is_gha_repository()
@@ -252,6 +257,56 @@ function is_gha_repository()
             'github'
         )
     );
+}
+
+/**
+ * Determine if the module being processed is "TOOLING"
+ *
+ * Example usage:
+ * is_gha_repository()
+ */
+function is_tooling()
+{
+    global $GITHUB_REF;
+    return in_array(
+        $GITHUB_REF,
+        array_column(
+            MetaData::getAllRepositoryMetaData()[MetaData::CATEGORY_TOOLING],
+            'github'
+        )
+    );
+}
+
+/**
+ * Determine if the module being processed is "MISC"
+ *
+ * Example usage:
+ * is_gha_repository()
+ */
+function is_misc()
+{
+    global $GITHUB_REF;
+    return in_array(
+        $GITHUB_REF,
+        array_column(
+            MetaData::getAllRepositoryMetaData()[MetaData::CATEGORY_MISC],
+            'github'
+        )
+    );
+}
+
+/**
+ * Determine if the module being processed has a wildcard major version mapping
+ * in silverstripe/supported-modules repositories.json
+ *
+ * Example usage:
+ * has_wildcard_major_version_mapping()
+ */
+function has_wildcard_major_version_mapping()
+{
+    global $GITHUB_REF;
+    $repoData = MetaData::getMetaDataForRepository($GITHUB_REF);
+    return array_key_exists('*', $repoData['majorVersionMapping']);
 }
 
 /**
@@ -350,21 +405,25 @@ function human_cron(string $cron): string
  * between 1 and 28
  * Note that this will return the exact same value every time it is called for a given filename in a given module
  */
-function predictable_random_int($max, $offset = 0): int
+function predictable_random_int($scriptName, $max, $offset = 0): int
+{
+    $chars = str_split(module_name() . $scriptName);
+    $codes = array_map(fn($c) => ord($c), $chars);
+    $sum = array_sum($codes);
+    $remainder = $sum % ($max + 1);
+    return $remainder + $offset;
+}
+
+/**
+ * Determine if the current branch is either 1 or 1.2 numeric style
+ * Can also be pulls/<number>/... style
+ */
+function current_branch_name_is_numeric_style()
 {
     global $MODULE_DIR;
-    $callingFile = debug_backtrace()[0]['file'];
-    // remove absolute path e.g. /home/myuser/...
-    $moduleStandardiserDir = basename(__DIR__);
-    $dirQuoted = preg_quote($moduleStandardiserDir);
-    // double $dirQuoted is for github actions CI where there which will have a directory strcture
-    // with /module-standardiser/module-standardiser/...
-    if (!preg_match("#/$dirQuoted/$dirQuoted/(.+)$#", $callingFile, $matches)) {
-        preg_match("#/$dirQuoted/(.+)$#", $callingFile, $matches);
+    $currentBranch = cmd('git rev-parse --abbrev-ref HEAD', $MODULE_DIR);
+    if (preg_match('#^(pulls/)?([0-9]+)(\.[0-9]+)?(/|$)#', $currentBranch)) {
+        return true;
     }
-    $relativePath = $matches[1];
-    $chars = str_split("$MODULE_DIR-$relativePath");
-    $codes = array_map(fn($c) => ord($c), $chars);
-    mt_srand(array_sum($codes));
-    return mt_rand(0, $max) + $offset;
+    return false;
 }

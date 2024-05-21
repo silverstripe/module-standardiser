@@ -1,11 +1,11 @@
 <?php
 
 // run on a random day of the week
-$runOnDay = predictable_random_int(6);
+$runOnDay = predictable_random_int('merge-ups', 6);
 // run at a random hour of the day
-$runOnHour = predictable_random_int(23);
+$runOnHour = predictable_random_int('merge-ups', 23);
 // run at a random minute of the hour rounded to 5 minutes
-$runOnMinute = predictable_random_int(11) * 5;
+$runOnMinute = predictable_random_int('merge-ups', 11) * 5;
 
 // If there's a CI workflow, offset mergeups from the CI run by 3 days
 if (check_file_exists('.github/workflows/dispatch-ci.yml')) {
@@ -59,6 +59,9 @@ if (check_file_exists('.github/workflows/merge-ups.yml')) {
     rename_file_if_exists('.github/workflows/merge-ups.yml', '.github/workflows/merge-up.yml');
 }
 
-if (!module_is_recipe() && !is_meta_repo()) {
-  write_file_even_if_exists('.github/workflows/merge-up.yml', $content);
+if (current_branch_name_is_numeric_style() && !module_is_recipe()) {
+    write_file_even_if_exists('.github/workflows/merge-up.yml', $content);
+} else {
+    // remove any merge-up.yml that was previously added though shouldn't be there
+    delete_file_if_exists('.github/workflows/merge-up.yml');
 }
