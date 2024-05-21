@@ -40,6 +40,10 @@ EOT;
 $dispatchCiPath = '.github/workflows/dispatch-ci.yml';
 $ciPath = '.github/workflows/ci.yml';
 $shouldHaveDispatchCi = (is_module() || is_composer_plugin()) && !is_docs() && !is_gha_repository();
+// If module non has_wildcard_major_version_mapping then dispatch-ci.yml should always be present
+if (!has_wildcard_major_version_mapping()) {
+  $shouldHaveDispatchCi = true;
+}
 
 if ($shouldHaveDispatchCi) {
   if (check_file_exists($ciPath)) {

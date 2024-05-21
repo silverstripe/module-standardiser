@@ -66,6 +66,8 @@ $updateCommand = function(InputInterface $input, OutputInterface $output): int {
         }
         cmd("git remote add pr-remote $prOrigin", $MODULE_DIR);
 
+        $useDefaultBranch = has_wildcard_major_version_mapping();
+
         if ($input->getOption('update-prs')) {
             // checkout latest existing pr branch
             cmd('git fetch pr-remote', $MODULE_DIR);
@@ -73,7 +75,7 @@ $updateCommand = function(InputInterface $input, OutputInterface $output): int {
             // example branch name: pulls/5/module-standardiser-1691550112
             $allBranches = array_map('trim', $allBranches);
             $allBranches = array_filter($allBranches, function($branch) {
-                return preg_match('#^pr\-remote/pulls/[0-9\.]+/module\-standardiser\-[0-9]{10}$#', $branch);
+                return preg_match('#^pr\-remote/pulls/.+?/module\-standardiser\-[0-9]{10}$#', $branch);
             });
             if (empty($allBranches)) {
                 warning("Could not find an existing PR branch for $repo - skipping");
@@ -108,11 +110,12 @@ $updateCommand = function(InputInterface $input, OutputInterface $output): int {
             $defaultBranch = cmd($cmd, $MODULE_DIR);
             cmd("git checkout $defaultBranch", $MODULE_DIR);
 
-            if (is_meta_repo()) {
-                $branchToCheckout = $allBranches[0];
+            $currentBranch = cmd('git rev-parse --abbrev-ref HEAD', $MODULE_DIR);
+
+            // checkout the branch to run scripts over
+            if ($useDefaultBranch) {
+                $branchToCheckout = $currentBranch;
             } else {
-                // checkout the branch to run scripts over
-                $currentBranch = cmd('git rev-parse --abbrev-ref HEAD', $MODULE_DIR);
                 // ensure that we're on a standard next-minor style branch
                 if (!ctype_digit($currentBranch)) {
                     $tmp = array_filter($allBranches, fn($branch) => ctype_digit($branch));
@@ -139,7 +142,7 @@ $updateCommand = function(InputInterface $input, OutputInterface $output): int {
         cmd("git checkout $branchToCheckout", $MODULE_DIR);
 
         // ensure that this branch actually supports the cmsMajor we're targetting
-        if ($branchOption !== 'github-default' && current_branch_cms_major() !== $cmsMajor) {
+        if (!$useDefaultBranch && $branchOption !== 'github-default' && current_branch_cms_major() !== $cmsMajor) {
             error("Branch $branchToCheckout does not support CMS major version $cmsMajor");
         }
 

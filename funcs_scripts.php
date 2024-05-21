@@ -150,6 +150,10 @@ function is_module()
         return false;
     }
 
+    if (is_gha_repository()) {
+        return false;
+    }
+
     $contents = read_file('composer.json');
     $json = json_decode($contents);
     if (is_null($json)) {
@@ -158,7 +162,7 @@ function is_module()
     }
 
     // config isn't technically a Silverstripe CMS module, but we treat it like one.
-    if ($json->name === 'silverstripe/config') {
+    if (($json->name ?? '') === 'silverstripe/config') {
         return true;
     }
 
@@ -238,6 +242,7 @@ function is_docs()
 
 /**
  * Determine if the module being processed is a gha-* repository e.g. gha-ci
+ * aka "WORKFLOW"
  *
  * Example usage:
  * is_gha_repository()
@@ -252,6 +257,56 @@ function is_gha_repository()
             'github'
         )
     );
+}
+
+/**
+ * Determine if the module being processed is "TOOLING"
+ *
+ * Example usage:
+ * is_gha_repository()
+ */
+function is_tooling()
+{
+    global $GITHUB_REF;
+    return in_array(
+        $GITHUB_REF,
+        array_column(
+            MetaData::getAllRepositoryMetaData()[MetaData::CATEGORY_TOOLING],
+            'github'
+        )
+    );
+}
+
+/**
+ * Determine if the module being processed is "MISC"
+ *
+ * Example usage:
+ * is_gha_repository()
+ */
+function is_misc()
+{
+    global $GITHUB_REF;
+    return in_array(
+        $GITHUB_REF,
+        array_column(
+            MetaData::getAllRepositoryMetaData()[MetaData::CATEGORY_MISC],
+            'github'
+        )
+    );
+}
+
+/**
+ * Determine if the module being processed has a wildcard major version mapping
+ * in silverstripe/supported-modules repositories.json
+ *
+ * Example usage:
+ * has_wildcard_major_version_mapping()
+ */
+function has_wildcard_major_version_mapping()
+{
+    global $GITHUB_REF;
+    $repoData = MetaData::getMetaDataForRepository($GITHUB_REF);
+    return array_key_exists('*', $repoData['majorVersionMapping']);
 }
 
 /**
@@ -357,4 +412,18 @@ function predictable_random_int($scriptName, $max, $offset = 0): int
     $sum = array_sum($codes);
     $remainder = $sum % ($max + 1);
     return $remainder + $offset;
+}
+
+/**
+ * Determine if the current branch is either 1 or 1.2 numeric style
+ * Can also be pulls/<number>/... style
+ */
+function current_branch_name_is_numeric_style()
+{
+    global $MODULE_DIR;
+    $currentBranch = cmd('git rev-parse --abbrev-ref HEAD', $MODULE_DIR);
+    if (preg_match('#^(pulls/)?([0-9]+)(\.[0-9]+)?(/|$)#', $currentBranch)) {
+        return true;
+    }
+    return false;
 }

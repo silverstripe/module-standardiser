@@ -34,6 +34,6 @@ jobs:
         uses: silverstripe/gha-update-js@v1
 EOT;
 
-if (check_file_exists('package.json')) {
+if (check_file_exists('package.json') && check_file_exists('yarn.lock')) {
     write_file_even_if_exists('.github/workflows/update-js.yml', $content);
 }
