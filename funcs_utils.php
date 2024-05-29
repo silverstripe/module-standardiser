@@ -152,7 +152,8 @@ function github_api($url, $data = [], $httpMethod = '')
 {
     // silverstripe-themes has a kind of weird redirect only for api requests
     $url = str_replace('/silverstripe-themes/silverstripe-simple', '/silverstripe/silverstripe-simple', $url);
-    info("Making curl request to $url");
+    $method = $httpMethod ? strtoupper($httpMethod) : 'GET';
+    info("Making $method curl request to $url");
     $token = github_token();
     $jsonStr = empty($data) ? '' : json_encode($data, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
     $ch = curl_init($url);
@@ -242,6 +243,44 @@ function output_repos_with_labels_updated()
     $io->writeln('Repos with labels created (add to --exclude if you need to re-run):');
     $io->writeln(implode(',', $REPOS_WITH_LABELS_UPDATED));
     $io->writeln('');
+}
+
+/**
+ * Outputs a list of repos that that had rulesets updated
+ * If there was an error with a run (probably a secondary rate limit), this can be
+ * copy pasted into the --exclude option for the next run to continue from where you left off
+ */
+function output_repos_with_rulesets_created_or_updated()
+{
+    if (running_unit_tests()) {
+        return;
+    }
+    global $REPOS_WITH_RULESETS_UPDATED;
+    $io = io();
+    $io->writeln('');
+    $io->writeln('Repos with rulesets created/updated (add to --exclude if you need to re-run):');
+    $io->writeln(implode(',', $REPOS_WITH_RULESETS_UPDATED));
+    $io->writeln('');
+}
+
+function create_ruleset($type, $additionalBranchConditions = [])
+{
+    $ruleset = file_get_contents("rulesets/$type-ruleset.json");
+    if (!$ruleset) {
+        error("Could not read ruleset for $type");
+    }
+    $json = json_decode($ruleset, true);
+    if ($type == 'branch') {
+        $json['name'] = BRANCH_RULESET_NAME;
+    } elseif ($type === 'tag') {
+        $json['name'] = TAG_RULESET_NAME;
+    } else {
+        error("Invalid ruleset type: $type");
+    }
+    foreach ($additionalBranchConditions as $value) {
+        $json['conditions']['ref_name']['include'][] = $value;
+    }
+    return $json;
 }
 
 /**

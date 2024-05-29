@@ -102,3 +102,22 @@ MS_GITHUB_TOKEN=abc123 php run.php labels --dry-run --only=silverstripe-config,s
 | --exclude=[modules] | Exclude the specified modules (without account prefix) separated by commas e.g. `silverstripe-mfa,silverstripe-totp` |
 | --dry-run | Do not update labels in GitHub, output to terminal only |
 | --no-delete | Do not delete `_data` directory before running |
+
+## Usage - Standardising GitHub repository branch and tag rulesets
+
+```bash
+MS_GITHUB_TOKEN=<token> php run.php rulesets <options>
+```
+
+**Example usage:**
+```bash
+MS_GITHUB_TOKEN=abc123 php run.php rulesets --dry-run --only=silverstripe-config,silverstripe-assets
+```
+
+### Command line options:
+
+| Flag | Description |
+| ---- | ------------|
+| --only=[modules] | Only include the specified modules (without account prefix) separated by commas e.g. `silverstripe-config,silverstripe-assets` |
+| --exclude=[modules] | Exclude the specified modules (without account prefix) separated by commas e.g. `silverstripe-mfa,silverstripe-totp` |
+| --dry-run | Do not update rulesets in GitHub, output to terminal only |
