@@ -5,6 +5,7 @@ include 'funcs_scripts.php';
 include 'funcs_utils.php';
 include 'update_command.php';
 include 'labels_command.php';
+include 'rulesets_command.php';
 
 use SilverStripe\SupportedModules\MetaData;
 use Symfony\Component\Console\Application;
@@ -19,6 +20,8 @@ const MODULES_DIR = '_modules';
 const TOOL_URL = 'https://github.com/silverstripe/module-standardiser';
 const PR_TITLE = 'MNT Run module-standardiser';
 const PR_DESCRIPTION = 'This pull-request was created automatically by [module-standardiser](' . TOOL_URL . ')';
+const BRANCH_RULESET_NAME = 'Silverstripe CMS branch ruleset';
+const TAG_RULESET_NAME = 'Silverstripe CMS tag ruleset';
 
 // global variables
 $MODULE_DIR = '';
@@ -26,6 +29,7 @@ $GITHUB_REF = '';
 $PRS_CREATED = [];
 $REPOS_WITH_PRS_CREATED = [];
 $REPOS_WITH_LABELS_UPDATED = [];
+$REPOS_WITH_RULESETS_UPDATED = [];
 $OUT = null;
 
 // options
@@ -101,6 +105,13 @@ $app->register('labels')
     ->addOption(...$optionDryRun)
     ->addOption(...$optionNoDelete)
     ->setCode($labelsCommand);
+
+$app->register('rulesets')
+    ->setDescription('Script to set rulesets on all repos only on the silverstripe account')
+    ->addOption(...$optionOnly)
+    ->addOption(...$optionExclude)
+    ->addOption(...$optionDryRun)
+    ->setCode($rulesetsCommand);
 
 try {
     $app->run();
