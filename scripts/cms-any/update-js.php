@@ -8,14 +8,18 @@ $runOnMinute = predictable_random_int('update-js', 11) * 5;
 // run on a 1st of the month
 $runOnDay = 1;
 
+// Runs every 6 months, one month before a scheduled minor release
+$cron = "$runOnMinute $runOnHour $runOnDay 3,9 *";
+$humanCron = human_cron($cron);
+
 $content = <<<EOT
 name: Update JS
 
 on:
   workflow_dispatch:
-  # Run on a schedule of once per quarter
+  # $humanCron
   schedule:
-    - cron: '$runOnMinute $runOnHour $runOnDay */3 *'
+    - cron: '$cron'
 
 permissions: {}
 
