@@ -20,6 +20,9 @@ const MODULES_DIR = '_modules';
 const TOOL_URL = 'https://github.com/silverstripe/module-standardiser';
 const PR_TITLE = 'MNT Run module-standardiser';
 const PR_DESCRIPTION = 'This pull-request was created automatically by [module-standardiser](' . TOOL_URL . ')';
+
+// DO NOT change these constants or else new ruleset will be created instead of
+// updating existing rulesets and we'll end up with 2x rulesets
 const BRANCH_RULESET_NAME = 'Silverstripe CMS branch ruleset';
 const TAG_RULESET_NAME = 'Silverstripe CMS tag ruleset';
 
