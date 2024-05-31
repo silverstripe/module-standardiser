@@ -67,8 +67,10 @@ $rulesetsCommand = function(InputInterface $input, OutputInterface $output): int
         // Note: This will read from the "rulesets" directory
         // In each of those json rulesets there is "bypass_actors"."actor_id" = 5
         // This translates to the "Repository admin" role
-        // It has been confirmed that the github-action user is able to bypass the ruleset as
-        // it has the "Organisation admin" role which is one level above the "Repository admin" role
+        //
+        // Note that the github-action user appears to have NO bypass permissions (not even write),
+        // even if it has the `contents: write` permission on the job that is running the action
+        //
         $branchRuleset = create_ruleset('branch', $additionalBranchConditions);
         $tagRuleset = create_ruleset('tag');
 
