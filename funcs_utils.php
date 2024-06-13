@@ -380,6 +380,24 @@ function filtered_modules($cmsMajor, $input)
         $cmsMajor === MetaData::HIGHEST_STABLE_CMS_MAJOR
     );
 
+    if ($input->getOption('unsupported-default-branch')) {
+        $prevCmsMajor = $cmsMajor - 1;
+        $prevCmsRepos = MetaData::removeReposNotInCmsMajor(
+            MetaData::getAllRepositoryMetaData(false),
+            $prevCmsMajor,
+            false
+        );
+        $repoGithubs = array_map(fn($repo) => $repo['github'], $repos);
+        $unsupportedRepos = [];
+        foreach ($prevCmsRepos as $prevCmsRepo) {
+            if (in_array($prevCmsRepo['github'], $repoGithubs)) {
+                continue;
+            }
+            $unsupportedRepos[] = $prevCmsRepo;
+        }
+        $repos = $unsupportedRepos;
+    }
+
     $modules = convert_repos_data_to_modules($repos);
 
     if ($input->getOption('only')) {

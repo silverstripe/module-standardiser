@@ -80,6 +80,12 @@ $optionNoDelete = [
     InputOption::VALUE_NONE,
     'Do not delete _data and _modules directories before running'
 ];
+$optionUnsupported = [
+    'unsupported-default-branch',
+    null,
+    InputOption::VALUE_NONE,
+    'Only update unsupported modules that were supported in the previous CMS major. Will use the GitHub default branch for each repository. Can not be used with the --cms-major option and will ignore the --branch option.'
+];
 $optionUpdatePrs = [
     'update-prs',
     null,
@@ -98,6 +104,7 @@ $app->register('update')
     ->addOption(...$optionDryRun)
     ->addOption(...$optionAccount)
     ->addOption(...$optionNoDelete)
+    ->addOption(...$optionUnsupported)
     ->addOption(...$optionUpdatePrs)
     ->setCode($updateCommand);
 

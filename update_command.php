@@ -18,6 +18,15 @@ $updateCommand = function(InputInterface $input, OutputInterface $output): int {
     // setup directories
     setup_directories($input);
 
+    // unsupported-default-branch  option must not be used with cms-major option
+    if ($input->getOption('unsupported-default-branch') && $input->getOption('cms-major')) {
+        error('The --unsupported-default-branch option must not be used with the --cms-major option');
+    }
+
+    // unsupported-default-branch automatically sets branch option to github-default
+    if ($input->getOption('unsupported-default-branch')) {
+        $input->setOption('branch', 'github-default');
+    }
     // branch
     $branchOption = $input->getOption('branch') ?: DEFAULT_BRANCH;
     if (!in_array($branchOption, BRANCH_OPTIONS)) {
@@ -31,7 +40,9 @@ $updateCommand = function(InputInterface $input, OutputInterface $output): int {
     $modules = filtered_modules($cmsMajor, $input);
 
     // script files
-    if ($branchOption === 'github-default') {
+    if ($input->getOption('unsupported-default-branch')) {
+        $scriptFiles = script_files('unsupported');
+    } elseif ($branchOption === 'github-default') {
         $scriptFiles = script_files('default-branch');
     } else {
         $scriptFiles = array_merge(
@@ -66,7 +77,7 @@ $updateCommand = function(InputInterface $input, OutputInterface $output): int {
         }
         cmd("git remote add pr-remote $prOrigin", $MODULE_DIR);
 
-        $useDefaultBranch = has_wildcard_major_version_mapping();
+        $useDefaultBranch = has_wildcard_major_version_mapping() || $branchOption === 'github-default';
 
         if ($input->getOption('update-prs')) {
             // checkout latest existing pr branch
