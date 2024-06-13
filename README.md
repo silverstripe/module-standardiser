@@ -54,9 +54,12 @@ MS_GITHUB_TOKEN=abc123 php run.php update --cms-major=5 --branch=next-minor --dr
 | --dry-run | Do not push to github or create pull-requests |
 | --account | GitHub account to use for creating pull-requests (default: creative-commoners) |
 | --no-delete | Do not delete `_data` and `_modules` directories before running |
+| --unsupported-default-branch | Only update unsupported modules that were supported in the previous CMS major. Will use the GitHub default branch for that repository. Can not be used with the `--cms-major` option and will ignore the `--branch` option. |
 | --update-prs | Update existing open PRs instead of creating new PRs |
 
-**Note** that using `--branch=github-default` will only run scripts in the `scripts/default-branch` directory.
+**Note** that the following flags use non-standard directories for their scripts:
+- Using `--branch=github-default` will only run scripts in the `scripts/default-branch` directory.
+- Using `--unsupported-default-branch` will only run scripts in the `scripts/cms-unsupported` directory.
 
 ### GitHub API secondary rate limit
 
