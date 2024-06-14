@@ -380,7 +380,7 @@ function filtered_modules($cmsMajor, $input)
         $cmsMajor === MetaData::HIGHEST_STABLE_CMS_MAJOR
     );
 
-    if ($input->getOption('unsupported-default-branch')) {
+    if ($input->hasOption('unsupported-default-branch') && $input->getOption('unsupported-default-branch')) {
         $prevCmsMajor = $cmsMajor - 1;
         $prevCmsRepos = MetaData::removeReposNotInCmsMajor(
             MetaData::getAllRepositoryMetaData(false),
