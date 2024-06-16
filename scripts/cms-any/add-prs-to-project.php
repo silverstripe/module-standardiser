@@ -18,7 +18,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Add PR to github project
-        uses: silverstripe/add-pr-to-project@v1
+        uses: silverstripe/gha-add-pr-to-project@v1
 EOT;
 
 $actionPath = '.github/workflows/add-prs-to-project.yml';
