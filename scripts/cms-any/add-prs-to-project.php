@@ -19,6 +19,9 @@ jobs:
     steps:
       - name: Add PR to github project
         uses: silverstripe/gha-add-pr-to-project@v1
+        with:
+          app_id: ${{ vars.PROJECT_PERMISSIONS_APP_ID }}
+          private_key: ${{ secrets.PROJECT_PERMISSIONS_APP_PRIVATE_KEY }}
 EOT;
 
 $actionPath = '.github/workflows/add-prs-to-project.yml';
