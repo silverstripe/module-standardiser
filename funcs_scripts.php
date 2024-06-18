@@ -241,6 +241,24 @@ function is_docs()
 }
 
 /**
+ * Determine if the module being processed is commercially supported
+ *
+ * Example usage:
+ * is_supported()
+ */
+function is_supported()
+{
+    global $GITHUB_REF;
+    return in_array(
+        $GITHUB_REF,
+        array_column(
+            MetaData::getAllRepositoryMetaData()[MetaData::CATEGORY_SUPPORTED],
+            'github'
+        )
+    );
+}
+
+/**
  * Determine if the module being processed is a gha-* repository e.g. gha-ci
  * aka "WORKFLOW"
  *
@@ -263,7 +281,7 @@ function is_gha_repository()
  * Determine if the module being processed is "TOOLING"
  *
  * Example usage:
- * is_gha_repository()
+ * is_tooling()
  */
 function is_tooling()
 {
@@ -281,7 +299,7 @@ function is_tooling()
  * Determine if the module being processed is "MISC"
  *
  * Example usage:
- * is_gha_repository()
+ * is_misc()
  */
 function is_misc()
 {
