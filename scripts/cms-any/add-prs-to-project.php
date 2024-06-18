@@ -1,6 +1,6 @@
 <?php
 
-$content = <<<EOT
+$content = <<<'EOT'
 name: Add new pull requests to a github project
 
 on:
