@@ -12,6 +12,8 @@ $updateCommand = function(InputInterface $input, OutputInterface $output): int {
     global $MODULE_DIR, $GITHUB_REF, $OUT, $PRS_CREATED, $REPOS_WITH_PRS_CREATED;
     $OUT = $output;
 
+    $reposMissingBranch = [];
+
     // validate system is ready
     validate_system();
 
@@ -146,8 +148,10 @@ $updateCommand = function(InputInterface $input, OutputInterface $output): int {
                     $branchOption
                 );
             }
+            // If we can't identify an appropriate branch, add to a list so we can report about it later.
             if (!in_array($branchToCheckout, $allBranches)) {
-                error("Could not find branch to checkout for $repo using --branch=$branchOption");
+                $reposMissingBranch[] = $repo;
+                continue;
             }
         }
         cmd("git checkout $branchToCheckout", $MODULE_DIR);
@@ -219,5 +223,13 @@ $updateCommand = function(InputInterface $input, OutputInterface $output): int {
     }
     output_repos_with_prs_created();
     output_prs_created();
+
+    // Report about any repos for which we couldn't find the right branch.
+    if (count($reposMissingBranch)) {
+        $reposString = implode("\n- ", $reposMissingBranch);
+        warning("Could not find branch to checkout for the following repos using --branch=$branchOption:\n- $reposString");
+        return Command::FAILURE;
+    }
+
     return Command::SUCCESS;
 };
