@@ -1,10 +1,10 @@
 <?php
 
 $content = <<<'EOT'
-name: Add new pull requests to a github project
+name: Add new PRs to github project
 
 on:
-  pull_request:
+  pull_request_target:
     types:
       - opened
       - ready_for_review
@@ -13,6 +13,7 @@ permissions: {}
 
 jobs:
   addprtoproject:
+    name: Add PR to GitHub Project
     # Only run on the silverstripe account
     if: github.repository_owner == 'silverstripe'
     runs-on: ubuntu-latest
