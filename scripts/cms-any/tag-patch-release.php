@@ -32,9 +32,16 @@ jobs:
 EOT;
 
 $workflowPath = '.github/workflows/tag-patch-release.yml';
-$ciPath = '.github/workflows/ci.yml';
+$ciPaths = [ '.github/workflows/ci.yml', '.github/workflows/action-ci.yml' ];
+$shouldHaveAction = false;
 
-if (check_file_exists($ciPath)) {
+foreach ($ciPaths as $ciPath) {
+    if (check_file_exists($ciPath)) {
+        $shouldHaveAction = true;
+    }
+}
+
+if ($shouldHaveAction) {
   write_file_even_if_exists($workflowPath, $content);
 } else {
   delete_file_if_exists($workflowPath);
