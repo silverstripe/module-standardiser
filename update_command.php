@@ -169,7 +169,11 @@ $updateCommand = function(InputInterface $input, OutputInterface $output): int {
         }
 
         // run scripts
+        $onlyThisScript = $input->getOption('script');
         foreach ($scriptFiles as $scriptFile) {
+            if ($onlyThisScript && basename($scriptFile, '.php') !== $onlyThisScript) {
+                continue;
+            }
             $contents = file_get_contents($scriptFile);
             $contents = str_replace('<?php', '', $contents);
             // wrap in an anonymous function to ensure that script variables do not go into the global scope
