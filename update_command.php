@@ -79,7 +79,7 @@ $updateCommand = function(InputInterface $input, OutputInterface $output): int {
         }
         cmd("git remote add pr-remote $prOrigin", $MODULE_DIR);
 
-        $useDefaultBranch = has_wildcard_major_version_mapping() || $branchOption === 'github-default';
+        $useDefaultBranch = (has_wildcard_major_version_mapping() && !current_branch_name_is_numeric_style()) || $branchOption === 'github-default';
 
         if ($input->getOption('update-prs')) {
             // checkout latest existing pr branch
