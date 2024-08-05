@@ -49,6 +49,7 @@ MS_GITHUB_TOKEN=abc123 php run.php update --cms-major=5 --branch=next-minor --dr
 | ---- | ------------|
 | --cms-major=[version] | The major version of CMS to use (default: 5) which determines the list of supported modules to use |
 | --branch=[type] | The branch type to use - `next-minor`\|`next-patch`\|`github-default` (default: `next-patch`) |
+| --script=[scriptname] | Only run a specific script. This is the name of the script file without the file extension e.g. `tag-patch-release` |
 | --only=[modules] | Only include the specified modules (without account prefix) separated by commas e.g. `silverstripe-config,silverstripe-assets` |
 | --exclude=[modules] | Exclude the specified modules (without account prefix) separated by commas e.g. `silverstripe-mfa,silverstripe-totp` |
 | --dry-run | Do not push to github or create pull-requests |

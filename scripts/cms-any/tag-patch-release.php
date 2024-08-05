@@ -32,9 +32,26 @@ jobs:
 EOT;
 
 $workflowPath = '.github/workflows/tag-patch-release.yml';
-$ciPath = '.github/workflows/ci.yml';
+$ciPaths = [ '.github/workflows/ci.yml', '.github/workflows/action-ci.yml' ];
+$shouldHaveAction = false;
 
-if (check_file_exists($ciPath)) {
+foreach ($ciPaths as $ciPath) {
+    if (check_file_exists($ciPath)) {
+        $shouldHaveAction = true;
+    }
+}
+
+$notAllowedRepos = [
+    'cow',
+    'rhino',
+    'github-issue-search-client',
+    'module-standardiser',
+    'silverstripe-tx-translator',
+    'supported-modules',
+];
+$shouldHaveAction = $shouldHaveAction && !is_misc() && !module_is_one_of($notAllowedRepos);
+
+if ($shouldHaveAction) {
   write_file_even_if_exists($workflowPath, $content);
 } else {
   delete_file_if_exists($workflowPath);

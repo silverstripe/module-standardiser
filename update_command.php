@@ -9,7 +9,7 @@ $updateCommand = function(InputInterface $input, OutputInterface $output): int {
     // This is the code that is executed when running the 'update' command
 
     // variables
-    global $MODULE_DIR, $GITHUB_REF, $OUT, $PRS_CREATED, $REPOS_WITH_PRS_CREATED;
+    global $MODULE_DIR, $GITHUB_REF, $OUT, $PRS_CREATED, $REPOS_WITH_PRS_CREATED, $REPOS_WITH_PRS_TO_CLOSE;
     $OUT = $output;
 
     $reposMissingBranch = [];
@@ -79,7 +79,7 @@ $updateCommand = function(InputInterface $input, OutputInterface $output): int {
         }
         cmd("git remote add pr-remote $prOrigin", $MODULE_DIR);
 
-        $useDefaultBranch = has_wildcard_major_version_mapping() || $branchOption === 'github-default';
+        $useDefaultBranch = (has_wildcard_major_version_mapping() && !current_branch_name_is_numeric_style()) || $branchOption === 'github-default';
 
         if ($input->getOption('update-prs')) {
             // checkout latest existing pr branch
@@ -161,15 +161,26 @@ $updateCommand = function(InputInterface $input, OutputInterface $output): int {
             error("Branch $branchToCheckout does not support CMS major version $cmsMajor");
         }
 
-        // create a new branch used for the pull-request
-        if (!$input->getOption('update-prs')) {
+        if ($input->getOption('update-prs')) {
+            // Delete the last commit so we're starting as through we didn't do the previous run
+            $lastCommitMessage = cmd('git log -1 --pretty=%B', $MODULE_DIR);
+            if ($lastCommitMessage !== PR_TITLE) {
+                error("Last commit message \"$lastCommitMessage\" does not match PR_TITLE \"" . PR_TITLE . "\"");
+            }
+            cmd("git reset HEAD~ --hard", $MODULE_DIR);
+        } else {
+            // create a new branch used for the pull-request
             $timestamp = time();
             $prBranch = "pulls/$branchToCheckout/module-standardiser-$timestamp";
             cmd("git checkout -b $prBranch", $MODULE_DIR);
         }
 
         // run scripts
+        $onlyThisScript = $input->getOption('script');
         foreach ($scriptFiles as $scriptFile) {
+            if ($onlyThisScript && basename($scriptFile, '.php') !== $onlyThisScript) {
+                continue;
+            }
             $contents = file_get_contents($scriptFile);
             $contents = str_replace('<?php', '', $contents);
             // wrap in an anonymous function to ensure that script variables do not go into the global scope
@@ -181,20 +192,14 @@ $updateCommand = function(InputInterface $input, OutputInterface $output): int {
         $status = cmd('git status', $MODULE_DIR);
         if (strpos($status, 'nothing to commit') !== false) {
             info("No changes to commit for $repo");
+            if ($input->getOption('update-prs')) {
+                $REPOS_WITH_PRS_TO_CLOSE[] = $GITHUB_REF;
+            }
             continue;
         }
+        // create new commit
         cmd('git add .', $MODULE_DIR);
-        if ($input->getOption('update-prs')) {
-            // squash on to existing commit
-            $lastCommitMessage = cmd('git log -1 --pretty=%B', $MODULE_DIR);
-            if ($lastCommitMessage !== PR_TITLE) {
-                error("Last commit message \"$lastCommitMessage\" does not match PR_TITLE \"" . PR_TITLE . "\"");
-            }
-            cmd("git commit --amend --no-edit", $MODULE_DIR);
-        } else {
-            // create new commit
-            cmd("git commit -m '" . PR_TITLE . "'", $MODULE_DIR);
-        }
+        cmd("git commit -m '" . PR_TITLE . "'", $MODULE_DIR);
         if ($input->getOption('dry-run')) {
             info('Not pushing changes or creating pull-request because --dry-run option is set');
             continue;
@@ -223,6 +228,7 @@ $updateCommand = function(InputInterface $input, OutputInterface $output): int {
     }
     output_repos_with_prs_created();
     output_prs_created();
+    output_repos_with_prs_to_close();
 
     // Report about any repos for which we couldn't find the right branch.
     if (count($reposMissingBranch)) {

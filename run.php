@@ -33,6 +33,7 @@ $PRS_CREATED = [];
 $REPOS_WITH_PRS_CREATED = [];
 $REPOS_WITH_LABELS_UPDATED = [];
 $REPOS_WITH_RULESETS_UPDATED = [];
+$REPOS_WITH_PRS_TO_CLOSE = [];
 $OUT = null;
 
 // options
@@ -47,6 +48,13 @@ $optionBranch = [
     null,
     InputOption::VALUE_REQUIRED,
     'The branch type to use - ' . implode('|', BRANCH_OPTIONS) . ' (default: ' . DEFAULT_BRANCH . ')'
+];
+$optionScript = [
+    'script',
+    null,
+    InputOption::VALUE_REQUIRED,
+    'Only run a specific script. This is the name of the script file without the file extension '
+    . 'e.g. tag-patch-release'
 ];
 $optionOnly = [
     'only',
@@ -99,6 +107,7 @@ $app->register('update')
     ->setDescription('The main script of module-standardiser')
     ->addOption(...$optionCmsMajor)
     ->addOption(...$optionBranch)
+    ->addOption(...$optionScript)
     ->addOption(...$optionOnly)
     ->addOption(...$optionExclude)
     ->addOption(...$optionDryRun)

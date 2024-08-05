@@ -19,6 +19,7 @@ use Symfony\Component\Process\Process;
 function error($message)
 {
     output_prs_created();
+    output_repos_with_prs_to_close();
     output_repos_with_prs_created();
     io()->error($message);
     if (!running_unit_tests()) {
@@ -224,6 +225,21 @@ function output_repos_with_prs_created()
     $io->writeln('');
     $io->writeln('Repos with pull requests created (add to --exclude if you need to re-run):');
     $io->writeln(implode(',', $REPOS_WITH_PRS_CREATED));
+    $io->writeln('');
+}
+
+function output_repos_with_prs_to_close()
+{
+    if (running_unit_tests()) {
+        return;
+    }
+    global $REPOS_WITH_PRS_TO_CLOSE;
+    $io = io();
+    $io->writeln('');
+    $io->writeln('Repos with pull requests that should be closed:');
+    foreach ($REPOS_WITH_PRS_TO_CLOSE as $pr) {
+        $io->writeln("- $pr");
+    }
     $io->writeln('');
 }
 
