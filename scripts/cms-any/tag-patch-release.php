@@ -31,6 +31,10 @@ jobs:
           latest_local_sha: \${{ inputs.latest_local_sha }}
 EOT;
 
+if (is_gha_repository()) {
+    $content .= "\n          dispatch_gha_autotag: true\n";
+}
+
 $workflowPath = '.github/workflows/tag-patch-release.yml';
 $ciPaths = [ '.github/workflows/ci.yml', '.github/workflows/action-ci.yml' ];
 $shouldHaveAction = false;
