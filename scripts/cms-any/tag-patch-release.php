@@ -2,6 +2,19 @@
 
 $account = module_account();
 
+$permissions = <<<EOT
+permissions:
+      contents: write
+EOT;
+if (is_gha_repository()) {
+  // gha repositories will dispatch auto-tag.yml from within the gha-tag-release action
+  $permissions = <<<EOT
+  permissions:
+        actions: write
+        contents: write
+  EOT;
+}
+
 $content = <<<EOT
 name: Tag patch release
 
@@ -22,8 +35,7 @@ jobs:
     # Only run cron on the $account account
     if: (github.event_name == 'schedule' && github.repository_owner == '$account') || (github.event_name != 'schedule')
     runs-on: ubuntu-latest
-    permissions:
-      contents: write
+    $permissions
     steps:
       - name: Tag release
         uses: silverstripe/gha-tag-release@v2
