@@ -65,7 +65,7 @@ $notAllowedRepos = [
     'silverstripe-tx-translator',
     'supported-modules',
 ];
-$shouldHaveAction = $shouldHaveAction && !is_misc() && !module_is_one_of($notAllowedRepos);
+$shouldHaveAction = $shouldHaveAction && !is_misc() && !module_is_recipe() && !module_is_one_of($notAllowedRepos);
 
 if ($shouldHaveAction) {
   write_file_even_if_exists($workflowPath, $content);
