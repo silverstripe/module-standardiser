@@ -13,6 +13,7 @@ use Symfony\Component\Console\Command\Command;
 const LABELS_COLORS = [
     'affects/v4' => '5319e7',
     'affects/v5' => '0e8a16',
+    'affects/v6' => 'baee47',
     'complexity/low' => 'c2e0c6',
     'complexity/medium' => 'fef2c0',
     'complexity/high' => 'f9d0c4',
