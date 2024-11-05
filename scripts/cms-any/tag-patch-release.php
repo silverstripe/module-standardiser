@@ -62,7 +62,6 @@ $notAllowedRepos = [
     'rhino',
     'github-issue-search-client',
     'module-standardiser',
-    'silverstripe-tx-translator',
     'supported-modules',
 ];
 $shouldHaveAction = $shouldHaveAction && !is_misc() && !module_is_recipe() && !module_is_one_of($notAllowedRepos);
