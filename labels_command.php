@@ -46,7 +46,6 @@ const LABELS_RENAME = [
 // Repos that should not have labels updated because of a lack of API permissions because they are on
 // non-silverstripe GitHub accounts, or because they are not applicable
 const LABELS_EXCLUDE_GHREPOS = [
-    'colymba/GridFieldBulkEditingTools',
     'composer/installers',
     'dnadesign/silverstripe-elemental-subsites',
     'hafriedlander/phockito',
