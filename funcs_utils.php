@@ -337,8 +337,13 @@ function current_branch_cms_major(
 ) {
     global $MODULE_DIR, $GITHUB_REF;
 
-    // This repo matches every major and matches start at the lowest - but we only want the highest stable.
+    // This repo matched multiple majors and matches start at the lowest - but we only want it for its highest supported one.
     if ($GITHUB_REF === 'silverstripe/silverstripe-simple') {
+        return '5';
+    }
+
+    // This repo matches multiple majors and matches start at the lowest - but we only want the highest stable.
+    if ($GITHUB_REF === 'silverstripe/startup-theme') {
         return MetaData::HIGHEST_STABLE_CMS_MAJOR;
     }
 
@@ -388,8 +393,9 @@ function setup_directories($input, $dirs = [DATA_DIR, MODULES_DIR]) {
 
 function filtered_modules($cmsMajor, $input)
 {
+    $allRepoData = MetaData::getAllRepositoryMetaData(false);
     $repos = MetaData::removeReposNotInCmsMajor(
-        MetaData::getAllRepositoryMetaData(false),
+        $allRepoData,
         $cmsMajor,
         // For repositories that only have a single support branch such as gha-generate-matrix, only include
         // them when updating the currently supported CMS major.
@@ -399,7 +405,7 @@ function filtered_modules($cmsMajor, $input)
     if ($input->hasOption('unsupported-default-branch') && $input->getOption('unsupported-default-branch')) {
         $prevCmsMajor = $cmsMajor - 1;
         $prevCmsRepos = MetaData::removeReposNotInCmsMajor(
-            MetaData::getAllRepositoryMetaData(false),
+            $allRepoData,
             $prevCmsMajor,
             false
         );
