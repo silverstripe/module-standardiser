@@ -36,12 +36,10 @@ $pullRequestTemplate = <<<EOT
 - [ ] CI is green
 EOT;
 
-// The template used when clicking "Open a blank issue"
-$defaultIssueTemplate = "<!-- Blank templates are for use by maintainers only! If you aren't a maintainer, please go back and pick one of the issue templates. -->";
-
 // Defines configuration for form-style issue templates
+// Blank issues are disabled, we use our own custom blank template below
 $config = <<<EOT
-blank_issues_enabled: true
+blank_issues_enabled: false
 contact_links:
   - name: Security Vulnerability
     url: https://docs.silverstripe.org/en/contributing/issues_and_bugs/#reporting-security-issues
@@ -89,11 +87,19 @@ body:
           required: true
 EOT;
 
+$blankIssueTemplate = <<<EOT
+---
+name: Blank issue
+about: Only for use by maintainers
+---
+<!-- Blank issue templates are for use by maintainers only! If you aren't a maintainer, please go back and pick one of the other issue templates. -->
+EOT;
+
 $files = [
     '.github/PULL_REQUEST_TEMPLATE.md' => $pullRequestTemplate,
-    '.github/ISSUE_TEMPLATE.md' => $defaultIssueTemplate,
     '.github/ISSUE_TEMPLATE/config.yml' => $config,
     '.github/ISSUE_TEMPLATE/1_docs_issue.yml' => $documentationIssueTemplate,
+    '.github/ISSUE_TEMPLATE/2_blank_issue.md' => $blankIssueTemplate,
 ];
 
 // See issue-pr-templates.php for the non-docs equivalent
@@ -104,3 +110,6 @@ if (!is_docs()) {
 foreach ($files as $path => $contents) {
     write_file_even_if_exists($path, $contents);
 }
+
+// Remove legacy ISSUE_TEMPLATE.md which no longer works in github
+delete_file_if_exists('.github/ISSUE_TEMPLATE.md');
