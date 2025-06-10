@@ -6,7 +6,7 @@ a number of pull-requests in GitHub.
 **This tool is only intended for use by Silverstripe core committers or the Silverstripe Ltd CMS Squad**
 
 It will run across all modules in [supported-modules](https://github.com/silverstripe/supported-modules) list and the 
-relevant branch e.g. `5` will be used depending on the command-line `--branch` option that's passed in.
+relevant branch e.g. `6` will be used depending on the command-line `--branch` option that's passed in.
 
 It will run all scripts in the `scripts/any` folder and then run all scripts in the applicable 
 `scripts/<cms-version>` folder depending on the command-line `--branch` option that's passed in.
@@ -40,14 +40,14 @@ MS_GITHUB_TOKEN=<token> php run.php update <options>
 
 **Example usage:**
 ```bash
-MS_GITHUB_TOKEN=abc123 php run.php update --cms-major=5 --branch=next-minor --dry-run --only=silverstripe-config,silverstripe-assets
+MS_GITHUB_TOKEN=abc123 php run.php update --cms-major=6 --branch=next-minor --dry-run --only=silverstripe-config,silverstripe-assets
 ```
 
 ### Command line options:
 
 | Flag | Description |
 | ---- | ------------|
-| --cms-major=[version] | The major version of CMS to use (default: 5) which determines the list of supported modules to use |
+| --cms-major=[version] | The major version of CMS to use (default: 6) which determines the list of supported modules to use |
 | --branch=[type] | The branch type to use - `next-minor`\|`next-patch`\|`github-default` (default: `next-patch`) |
 | --script=[scriptname] | Only run a specific script. This is the name of the script file without the file extension e.g. `tag-patch-release` |
 | --only=[modules] | Only include the specified modules (without account prefix) separated by commas e.g. `silverstripe-config,silverstripe-assets` |

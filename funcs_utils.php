@@ -337,16 +337,6 @@ function current_branch_cms_major(
 ) {
     global $MODULE_DIR, $GITHUB_REF;
 
-    // This repo matched multiple majors and matches start at the lowest - but we only want it for its highest supported one.
-    if ($GITHUB_REF === 'silverstripe/silverstripe-simple') {
-        return '5';
-    }
-
-    // This repo matches multiple majors and matches start at the lowest - but we only want the highest stable.
-    if ($GITHUB_REF === 'silverstripe/startup-theme') {
-        return MetaData::HIGHEST_STABLE_CMS_MAJOR;
-    }
-
     $contents = '';
     if ($composerJson) {
         $contents = $composerJson;
