@@ -67,7 +67,7 @@ body:
       description: A list of links of pages which are affected by this issue
       placeholder: |
 
-        - [Getting Started](https://docs.silverstripe.org/en/5/getting_started/)
+        - [Getting Started](https://docs.silverstripe.org/en/getting_started/)
     validations:
       required: true
   - type: textarea

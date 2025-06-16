@@ -11,7 +11,6 @@ use Symfony\Component\Console\Command\Command;
 //
 // Do not prefix color with hash i.e. use 'cccccc' not '#cccccc'
 const LABELS_COLORS = [
-    'affects/v4' => '5319e7',
     'affects/v5' => '0e8a16',
     'affects/v6' => 'baee47',
     'complexity/low' => 'c2e0c6',
