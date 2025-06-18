@@ -1,5 +1,7 @@
 <?php
 
+global $CMS_MAJOR;
+
 // run on a random day of the week
 $runOnDay = predictable_random_int('merge-ups', 6);
 // run at a random hour of the day
@@ -29,6 +31,8 @@ $cron = "$runOnMinute $runOnHour * * $runOnDay";
 $humanCron = human_cron($cron);
 $account = module_account();
 
+$version = ($CMS_MAJOR < 6) ? '1' : '2';
+
 $content = <<<EOT
 name: Merge-up
 
@@ -51,7 +55,7 @@ jobs:
       actions: write
     steps:
       - name: Merge-up
-        uses: silverstripe/gha-merge-up@v1
+        uses: silverstripe/gha-merge-up@v$version
 EOT;
 
 // rename any existing misnamed merge-ups.yml to merge-up.yml
