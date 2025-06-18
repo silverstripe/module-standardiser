@@ -49,18 +49,31 @@ class FuncsUtilsTest extends TestCase
 
     public function provideCurrentBranchCmsMajor()
     {
-        return [
-            ['4', json_encode(['require' => ['silverstripe/framework' => '^4.13']])],
-            ['5', json_encode(['require' => ['silverstripe/framework' => '^5.0']])],
-            ['6', json_encode(['require' => ['silverstripe/framework' => '^6']])],
-            ['5', json_encode(['require' => ['silverstripe/cms' => '^5']])],
-            ['5', json_encode(['require' => ['silverstripe/mfa' => '^5']])],
-            ['4', json_encode(['require' => ['silverstripe/assets' => '^1']])],
-            ['5', json_encode(['require' => ['silverstripe/assets' => '^2']])],
-            ['4', json_encode(['require' => ['php' => '^7.4']])],
-            ['5', json_encode(['require' => ['php' => '^8.1']])],
-            [MetaData::HIGHEST_STABLE_CMS_MAJOR, json_encode(['require' => ['silverstripe/lorem-ipsum' => '^2']])],
+        $lowestMajor = MetaData::LOWEST_SUPPORTED_CMS_MAJOR;
+        $highestMajor = MetaData::HIGHEST_STABLE_CMS_MAJOR;
+        $lowestMajorPhpVersions = MetaData::PHP_VERSIONS_FOR_CMS_RELEASES[$lowestMajor];
+        $highestMajorPhpVersions = MetaData::PHP_VERSIONS_FOR_CMS_RELEASES[$highestMajor];
+        $scenarios = [
+            'lowest major with minor' => [$lowestMajor, json_encode(['require' => ['silverstripe/framework' => "^{$lowestMajor}.13"]])],
+            'highest major with minor' => [$highestMajor, json_encode(['require' => ['silverstripe/framework' => "^{$highestMajor}.0"]])],
+            'highest major cms' => [$highestMajor, json_encode(['require' => ['silverstripe/cms' => '^' . $highestMajor]])],
+            'highest major mfa' => [$highestMajor, json_encode(['require' => ['silverstripe/mfa' => '^' . $highestMajor]])],
+            'lowest major offset' => [$lowestMajor, json_encode(['require' => ['silverstripe/assets' => '^' . (string)($lowestMajor - 3)]])],
+            'highest major offset' => [$highestMajor, json_encode(['require' => ['silverstripe/assets' => '^' . (string)($highestMajor - 3)]])],
+            'lowest major php version' => [$lowestMajor, json_encode(['require' => ['php' => '^' . $lowestMajorPhpVersions[0]]])],
+            'highest major php version' => [$highestMajor, json_encode(['require' => ['php' => '^'  . $highestMajorPhpVersions[0]]])],
+            'old PHP dep - default to highest major' => [$highestMajor, json_encode(['require' => ['php' => '^7.4']])],
+            'no supported module - default to highest major' => [$highestMajor, json_encode(['require' => ['silverstripe/lorem-ipsum' => '^2']])],
         ];
+
+        $nextMajor = (string)($highestMajor + 1);
+        // Make sure we can deal with pre-release majors
+        if (array_key_exists($nextMajor, MetaData::PHP_VERSIONS_FOR_CMS_RELEASES)) {
+            $nextMajorPhpVersions = MetaData::PHP_VERSIONS_FOR_CMS_RELEASES[$nextMajor];
+            $scenarios['next major supported module'] = [$nextMajor, json_encode(['require' => ['silverstripe/framework' => '^' . $nextMajor]])];
+            $scenarios['next major php version'] = [$nextMajor, json_encode(['require' => ['php' => '^' . $nextMajorPhpVersions[0]]])];
+        }
+        return $scenarios;
     }
 }
 

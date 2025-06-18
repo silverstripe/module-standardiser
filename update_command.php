@@ -9,7 +9,7 @@ $updateCommand = function(InputInterface $input, OutputInterface $output): int {
     // This is the code that is executed when running the 'update' command
 
     // variables
-    global $MODULE_DIR, $GITHUB_REF, $OUT, $PRS_CREATED, $REPOS_WITH_PRS_CREATED, $REPOS_WITH_PRS_TO_CLOSE;
+    global $MODULE_DIR, $GITHUB_REF, $OUT, $PRS_CREATED, $REPOS_WITH_PRS_CREATED, $REPOS_WITH_PRS_TO_CLOSE, $CMS_MAJOR;
     $OUT = $output;
 
     $reposMissingBranch = [];
@@ -36,10 +36,10 @@ $updateCommand = function(InputInterface $input, OutputInterface $output): int {
     }
 
     // CMS major version to use
-    $cmsMajor = $input->getOption('cms-major') ?: MetaData::HIGHEST_STABLE_CMS_MAJOR;
+    $CMS_MAJOR = $input->getOption('cms-major') ?: MetaData::HIGHEST_STABLE_CMS_MAJOR;
 
     // modules
-    $modules = filtered_modules($cmsMajor, $input);
+    $modules = filtered_modules($CMS_MAJOR, $input);
 
     // script files
     if ($input->getOption('unsupported-default-branch')) {
@@ -49,7 +49,7 @@ $updateCommand = function(InputInterface $input, OutputInterface $output): int {
     } else {
         $scriptFiles = array_merge(
             script_files('any'),
-            script_files($cmsMajor),
+            script_files($CMS_MAJOR),
         );
     }
 
@@ -144,7 +144,7 @@ $updateCommand = function(InputInterface $input, OutputInterface $output): int {
                     $defaultBranch,
                     $currentBranch,
                     $currentBranchCmsMajor,
-                    $cmsMajor,
+                    $CMS_MAJOR,
                     $branchOption
                 );
             }
@@ -157,8 +157,8 @@ $updateCommand = function(InputInterface $input, OutputInterface $output): int {
         cmd("git checkout $branchToCheckout", $MODULE_DIR);
 
         // ensure that this branch actually supports the cmsMajor we're targetting
-        if (!$useDefaultBranch && $branchOption !== 'github-default' && current_branch_cms_major() !== $cmsMajor) {
-            error("Branch $branchToCheckout does not support CMS major version $cmsMajor");
+        if (!$useDefaultBranch && $branchOption !== 'github-default' && current_branch_cms_major() !== $CMS_MAJOR) {
+            error("Branch $branchToCheckout does not support CMS major version $CMS_MAJOR");
         }
 
         if ($input->getOption('update-prs')) {
