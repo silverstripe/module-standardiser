@@ -12,6 +12,8 @@ $runOnMinute = predictable_random_int('dispatch-ci', 11) * 5;
 $cron = "$runOnMinute $runOnHour * * $runsOnDaysOfWeek";
 $humanCron = human_cron($cron);
 $account = module_account();
+$accountDisplay = $account === 'silverstripe' ? 'silverstripe' : "$account or silverstripe";
+$conditional = schedulable_workflow_conditional($account);
 
 $content = <<<EOT
 name: Dispatch CI
@@ -26,8 +28,8 @@ permissions: {}
 jobs:
   dispatch-ci:
     name: Dispatch CI
-    # Only run cron on the $account account
-    if: (github.event_name == 'schedule' && github.repository_owner == '$account') || (github.event_name != 'schedule')
+    # Only run cron on the $accountDisplay account
+    if: $conditional
     runs-on: ubuntu-latest
     permissions:
       contents: read

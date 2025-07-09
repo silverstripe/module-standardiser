@@ -30,6 +30,8 @@ if (check_file_exists('.github/workflows/dispatch-ci.yml')) {
 $cron = "$runOnMinute $runOnHour * * $runOnDay";
 $humanCron = human_cron($cron);
 $account = module_account();
+$accountDisplay = $account === 'silverstripe' ? 'silverstripe' : "$account or silverstripe";
+$conditional = schedulable_workflow_conditional($account);
 
 $version = ($CMS_MAJOR < 6) ? '1' : '2';
 
@@ -47,8 +49,8 @@ permissions: {}
 jobs:
   merge-up:
     name: Merge-up
-    # Only run cron on the $account account
-    if: (github.event_name == 'schedule' && github.repository_owner == '$account') || (github.event_name != 'schedule')
+    # Only run cron on the $accountDisplay account
+    if: $conditional
     runs-on: ubuntu-latest
     permissions:
       contents: write

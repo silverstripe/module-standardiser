@@ -1,6 +1,8 @@
 <?php
 
 $account = module_account();
+$accountDisplay = $account === 'silverstripe' ? 'silverstripe' : "$account or silverstripe";
+$conditional = schedulable_workflow_conditional($account);
 
 $permissions = <<<EOT
 permissions:
@@ -32,8 +34,8 @@ permissions: {}
 jobs:
   tagpatchrelease:
     name: Tag patch release
-    # Only run cron on the $account account
-    if: (github.event_name == 'schedule' && github.repository_owner == '$account') || (github.event_name != 'schedule')
+    # Only run cron on the $accountDisplay account
+    if: $conditional
     runs-on: ubuntu-latest
     $permissions
     steps:

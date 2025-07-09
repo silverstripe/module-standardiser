@@ -445,3 +445,18 @@ function current_branch_name_is_numeric_style()
     }
     return false;
 }
+
+/**
+ * Create a conditional statement used for workflows that can be triggered on a schedule
+ */
+function schedulable_workflow_conditional(string $account): string
+{
+    if ($account === 'silverstripe') {
+        $stmt = "github.repository_owner == 'silverstripe'";
+    } else {
+        // Allow both $account or silverstripe in case the non-silverstripe repository
+        // is transferred to the silverstripe account at a later date
+        $stmt = "(github.repository_owner == '$account' || github.repository_owner == 'silverstripe')";
+    }
+    return "(github.event_name == 'schedule' && $stmt) || (github.event_name != 'schedule')";
+}

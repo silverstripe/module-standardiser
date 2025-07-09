@@ -1,5 +1,7 @@
 <?php
 $account = module_account();
+$accountDisplay = $account === 'silverstripe' ? 'silverstripe' : "$account or silverstripe";
+$conditional = schedulable_workflow_conditional($account);
 
 // run at a random hour of the day
 $runOnHour = predictable_random_int('update-js', 23);
@@ -26,8 +28,8 @@ permissions: {}
 jobs:
   update-js:
     name: Update JS
-    # Only run cron on the $account account
-    if: (github.event_name == 'schedule' && github.repository_owner == '$account') || (github.event_name != 'schedule')
+    # Only run cron on the $accountDisplay account
+    if: $conditional
     runs-on: ubuntu-latest
     permissions:
       contents: write
