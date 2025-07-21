@@ -1,5 +1,7 @@
 <?php
 
+global $GITHUB_REF;
+
 $account = module_account();
 $accountDisplay = $account === 'silverstripe' ? 'silverstripe' : "$account or silverstripe";
 $conditional = schedulable_workflow_conditional($account);
@@ -66,7 +68,11 @@ $notAllowedRepos = [
     'module-standardiser',
     'supported-modules',
 ];
-$shouldHaveAction = $shouldHaveAction && !is_misc() && !module_is_recipe() && !module_is_one_of($notAllowedRepos);
+$shouldHaveAction = $GITHUB_REF === 'silverstripe/silverstripe-non-blocking-sessions'
+    || $shouldHaveAction
+    && !is_misc()
+    && !module_is_recipe()
+    && !module_is_one_of($notAllowedRepos);
 
 if ($shouldHaveAction) {
   write_file_even_if_exists($workflowPath, $content);
