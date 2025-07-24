@@ -22,6 +22,7 @@ on:
   # $humanCron
   schedule:
     - cron: '$cron'
+  workflow_dispatch:
 
 permissions: {}
 
