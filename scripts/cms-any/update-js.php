@@ -1,4 +1,5 @@
 <?php
+
 $account = module_account();
 $accountDisplay = $account === 'silverstripe' ? 'silverstripe' : "$account or silverstripe";
 $conditional = schedulable_workflow_conditional($account);
@@ -48,7 +49,7 @@ jobs:
       actions: write
     steps:
       - name: Update JS
-        uses: silverstripe/gha-update-js@v1
+        uses: silverstripe/gha-update-js@v2
         with:
           branch_type: \${{ github.event_name == 'schedule' && 'schedule' || github.event.inputs.branch_type }}
 EOT;

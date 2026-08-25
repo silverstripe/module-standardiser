@@ -33,7 +33,7 @@ $account = module_account();
 $accountDisplay = $account === 'silverstripe' ? 'silverstripe' : "$account or silverstripe";
 $conditional = schedulable_workflow_conditional($account);
 
-$version = ($CMS_MAJOR < 6) ? '1' : '2';
+$version = ($CMS_MAJOR < 6) ? '1' : '3';
 
 $content = <<<EOT
 name: Merge-up
